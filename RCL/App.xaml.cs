@@ -15,7 +15,7 @@ public partial class App : Application
 
         AppPaths.Ensure();
         Log.Start();
-        Log.Info("==== RCL 1.3.0 启动 ====");
+        Log.Info("==== RCL " + UpdateService.CurrentVersion + " 启动 ====");
         SecurityHardening.Apply();
         AppSettings.Load();
         ThemeManager.Apply(AppSettings.Current.AccentHex);
@@ -64,6 +64,41 @@ public partial class App : Application
         var cli = CommandLineOptions.Parse(e.Args);
         if (cli.LaunchId is not null || cli.IsProtocolLaunch)
             window.Dispatcher.BeginInvoke(new Action(() => window.LaunchFromCommandLine(cli)), DispatcherPriority.Loaded);
+
+        if (AppSettings.Current.CheckUpdatesOnStartup &&
+            !string.Equals(AppSettings.Current.RclUpdateMode, "Manual", StringComparison.OrdinalIgnoreCase))
+            _ = CheckForUpdatesAsync(window);
+    }
+
+    /// <summary>
+    /// GitHub releases by default: automatic mode downloads and restarts, prompt mode asks first.
+    /// Any failure is logged and the launcher keeps running on the current version.
+    /// </summary>
+    private static async Task CheckForUpdatesAsync(MainWindow window)
+    {
+        try
+        {
+            var info = await UpdateService.CheckDefaultAsync();
+            if (info is null)
+                return;
+
+            if (string.Equals(AppSettings.Current.RclUpdateMode, "Prompt", StringComparison.OrdinalIgnoreCase))
+            {
+                var proceed = window.Dispatcher.Invoke(() => DialogService.Confirm(
+                    $"发现新版本 RCL {info.Version}（当前 {UpdateService.CurrentVersion}）。\n\n现在下载并重启 RCL 更新吗？",
+                    "发现更新", "更新", "稍后"));
+                if (!proceed)
+                    return;
+            }
+
+            window.Dispatcher.Invoke(() => window.ShowToast($"正在更新到 RCL {info.Version}…"));
+            var path = await UpdateService.DownloadAsync(info);
+            window.Dispatcher.Invoke(() => UpdateService.ApplyAndRestart(path));
+        }
+        catch (Exception ex)
+        {
+            Log.Warn("启动时检查更新失败：" + ex.Message);
+        }
     }
 
     protected override void OnExit(ExitEventArgs e)

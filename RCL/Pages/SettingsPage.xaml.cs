@@ -94,6 +94,13 @@ public partial class SettingsPage : UserControl
         DiscordClientIdBox.Text = s.DiscordClientId;
         UpdateCurrentText.Text = "当前版本：RCL " + UpdateService.CurrentVersion;
         UpdateUrlBox.Text = s.UpdateManifestUrl;
+        GitHubRepoBox.Text = s.GitHubRepo;
+        UpdateModeCombo.SelectedIndex = s.RclUpdateMode switch
+        {
+            "Prompt" => 1,
+            "Manual" => 2,
+            _ => 0
+        };
         UpdateStartupCheck.IsChecked = s.CheckUpdatesOnStartup;
 
         RefreshMultiStatus();
@@ -848,6 +855,13 @@ public partial class SettingsPage : UserControl
         var s = AppSettings.Current;
         UpdateCurrentText.Text = "当前版本：RCL " + UpdateService.CurrentVersion;
         UpdateUrlBox.Text = s.UpdateManifestUrl;
+        GitHubRepoBox.Text = s.GitHubRepo;
+        UpdateModeCombo.SelectedIndex = s.RclUpdateMode switch
+        {
+            "Prompt" => 1,
+            "Manual" => 2,
+            _ => 0
+        };
         UpdateStartupCheck.IsChecked = s.CheckUpdatesOnStartup;
 
         if (UpdateService.LastFound is { } info)
@@ -859,21 +873,40 @@ public partial class SettingsPage : UserControl
         else
         {
             UpdateInstallButton.Visibility = Visibility.Collapsed;
-            UpdateStatusText.Text = string.IsNullOrWhiteSpace(s.UpdateManifestUrl)
-                ? "还没有配置更新源。"
-                : "点「保存并检查」获取最新版本。";
+            UpdateStatusText.Text = "点「保存并检查」从 GitHub 仓库获取最新版本。";
         }
+    }
+
+    private void UpdateMode_Changed(object sender, SelectionChangedEventArgs e)
+    {
+        if (_loading)
+            return;
+        AppSettings.Current.RclUpdateMode = UpdateModeCombo.SelectedIndex switch
+        {
+            1 => "Prompt",
+            2 => "Manual",
+            _ => "Auto"
+        };
+        AppSettings.Save();
     }
 
     private async void CheckUpdates_Click(object sender, RoutedEventArgs e)
     {
         var url = UpdateUrlBox.Text.Trim();
+        var repo = GitHubRepoBox.Text.Trim();
         AppSettings.Current.UpdateManifestUrl = url;
+        AppSettings.Current.GitHubRepo = repo;
         AppSettings.Current.CheckUpdatesOnStartup = UpdateStartupCheck.IsChecked == true;
+        AppSettings.Current.RclUpdateMode = UpdateModeCombo.SelectedIndex switch
+        {
+            1 => "Prompt",
+            2 => "Manual",
+            _ => "Auto"
+        };
         AppSettings.Save();
 
         UpdateInstallButton.Visibility = Visibility.Collapsed;
-        if (url.Length == 0)
+        if (url.Length == 0 && repo.Length == 0)
         {
             UpdateStatusText.Text = "还没有配置更新源。";
             return;
@@ -884,7 +917,7 @@ public partial class SettingsPage : UserControl
         UpdateStatusText.Text = "正在检查更新…";
         try
         {
-            var info = await UpdateService.CheckAsync(url);
+            var info = await UpdateService.CheckDefaultAsync();
             if (info is null)
             {
                 UpdateStatusText.Text = $"当前已经是最新版本（RCL {UpdateService.CurrentVersion}）。";

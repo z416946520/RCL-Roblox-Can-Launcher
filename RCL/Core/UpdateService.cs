@@ -15,6 +15,8 @@ public sealed class UpdateInfo
     public string Sha256 { get; init; } = "";
     public string? Notes { get; init; }
     public DateTimeOffset? PublishedAt { get; init; }
+    public string AssetName { get; init; } = "";
+    public long Size { get; init; }
 }
 
 /// <summary>
@@ -98,6 +100,115 @@ public static class UpdateService
         return info;
     }
 
+    /// <summary>
+    /// GitHub releases for the configured repository, unless a custom manifest URL is set.
+    /// </summary>
+    public static Task<UpdateInfo?> CheckDefaultAsync(CancellationToken ct = default)
+    {
+        var custom = AppSettings.Current.UpdateManifestUrl?.Trim() ?? "";
+        return custom.Length > 0
+            ? CheckAsync(custom, ct)
+            : CheckGitHubAsync(AppSettings.Current.GitHubRepo, ct);
+    }
+
+    public static async Task<UpdateInfo?> CheckGitHubAsync(string repository, CancellationToken ct = default)
+    {
+        LastError = null;
+        LastFound = null;
+        repository = (repository ?? "").Trim().Trim('/');
+        if (repository.Length == 0)
+            throw new InvalidOperationException("还没有配置 GitHub 仓库。");
+
+        using var request = new HttpRequestMessage(HttpMethod.Get,
+            $"https://api.github.com/repos/{repository}/releases?per_page=10");
+        request.Headers.UserAgent.ParseAdd("RCL-Update");
+        request.Headers.Accept.ParseAdd("application/vnd.github+json");
+
+        using var response = await Http.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, ct)
+            .ConfigureAwait(false);
+        if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
+            throw new InvalidOperationException($"GitHub 仓库不存在：{repository}");
+        response.EnsureSuccessStatusCode();
+
+        var body = await response.Content.ReadAsStringAsync(ct).ConfigureAwait(false);
+        using var doc = JsonDocument.Parse(body);
+        if (doc.RootElement.ValueKind != JsonValueKind.Array)
+            throw new InvalidOperationException("GitHub 返回的发布列表格式不正确。");
+
+        var localVersion = Version.TryParse(CurrentVersion, out var local) ? local : new Version(0, 0, 0);
+        foreach (var release in doc.RootElement.EnumerateArray())
+        {
+            if (release.TryGetProperty("draft", out var draft) && draft.ValueKind == JsonValueKind.True)
+                continue;
+            if (release.TryGetProperty("prerelease", out var pre) && pre.ValueKind == JsonValueKind.True)
+                continue;
+
+            var tag = (release.TryGetProperty("tag_name", out var tagElement) ? tagElement.GetString() : "")
+                ?.Trim().TrimStart('v', 'V') ?? "";
+            if (!Version.TryParse(tag, out var remote) || remote <= localVersion)
+                continue;
+
+            var (url, name, size, sha) = PickAsset(release);
+            if (url.Length == 0)
+                continue;
+
+            DateTimeOffset? published = null;
+            if (DateTimeOffset.TryParse(
+                    release.TryGetProperty("published_at", out var publishedAt) ? publishedAt.GetString() : null,
+                    out var parsed))
+                published = parsed;
+
+            var info = new UpdateInfo
+            {
+                Version = tag,
+                Url = url,
+                Sha256 = sha,
+                Size = size,
+                AssetName = name,
+                Notes = release.TryGetProperty("body", out var notes) ? notes.GetString() : null,
+                PublishedAt = published
+            };
+            LastFound = info;
+            Log.Info($"发现 RCL 新版本 {info.Version}（GitHub {repository}，当前 {CurrentVersion}）");
+            return info;
+        }
+
+        Log.Info($"RCL 已是最新版本（{CurrentVersion}）");
+        return null;
+    }
+
+    private static (string Url, string Name, long Size, string Sha256) PickAsset(JsonElement release)
+    {
+        if (!release.TryGetProperty("assets", out var assets) || assets.ValueKind != JsonValueKind.Array)
+            return ("", "", 0, "");
+
+        JsonElement? picked = null;
+        foreach (var asset in assets.EnumerateArray())
+        {
+            var name = asset.TryGetProperty("name", out var nameElement) ? nameElement.GetString() ?? "" : "";
+            if (!name.EndsWith(".exe", StringComparison.OrdinalIgnoreCase))
+                continue;
+            if (name.Equals("RCL.exe", StringComparison.OrdinalIgnoreCase))
+            {
+                picked = asset;
+                break;
+            }
+            picked ??= asset;
+        }
+
+        if (picked is not { } chosen)
+            return ("", "", 0, "");
+
+        var assetName = chosen.TryGetProperty("name", out var n) ? n.GetString() ?? "" : "";
+        var url = chosen.TryGetProperty("browser_download_url", out var u) ? u.GetString() ?? "" : "";
+        var size = chosen.TryGetProperty("size", out var s) && s.TryGetInt64(out var sizeValue) ? sizeValue : 0;
+        var digest = chosen.TryGetProperty("digest", out var d) ? d.GetString() ?? "" : "";
+        var sha = digest.StartsWith("sha256:", StringComparison.OrdinalIgnoreCase)
+            ? digest["sha256:".Length..].ToLowerInvariant()
+            : "";
+        return (url, assetName, size, sha);
+    }
+
     public static async Task<string> DownloadAsync(
         UpdateInfo info,
         IProgress<double>? progress = null,
@@ -142,11 +253,16 @@ public static class UpdateService
             }
 
             var actual = Convert.ToHexString(hash.GetHashAndReset()).ToLowerInvariant();
-            if (!actual.Equals(info.Sha256, StringComparison.OrdinalIgnoreCase))
+            if (!string.IsNullOrWhiteSpace(info.Sha256) &&
+                !actual.Equals(info.Sha256, StringComparison.OrdinalIgnoreCase))
                 throw new InvalidOperationException("更新文件校验失败，文件已删除。");
 
+            if (info.Size > 0 && new FileInfo(part).Length != info.Size)
+                throw new InvalidOperationException(
+                    $"更新文件大小不符（{new FileInfo(part).Length} / {info.Size} 字节），文件已删除。");
+
             File.Move(part, target, true);
-            Log.Info($"更新已下载并通过校验：{target}");
+            Log.Info($"更新已下载{(string.IsNullOrWhiteSpace(info.Sha256) ? "（按大小校验）" : "并通过校验")}：{target}");
             return target;
         }
         catch

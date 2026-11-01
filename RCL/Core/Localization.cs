@@ -322,6 +322,15 @@ public static class Loc
         ["备份配置…"] = "Backup settings…",
         ["导出诊断包"] = "Export diagnostics",
         ["更新"] = "Updates",
+        ["更新方式"] = "Update mode",
+        ["自动：发现新版本就下载并重启"] = "Automatic: download and restart on a new release",
+        ["提示：发现新版本先询问"] = "Ask before updating",
+        ["手动：只在设置里检查"] = "Manual: check from settings only",
+        ["GitHub 仓库（默认更新源）"] = "GitHub repository (default source)",
+        ["更新源（JSON 清单地址，留空时使用上面的 GitHub 仓库）"] =
+            "Custom manifest URL (leave empty to use the GitHub repository above)",
+        ["GitHub 模式读取 Releases 里的 RCL.exe；清单模式至少包含 version、url、sha256。"] =
+            "GitHub mode reads RCL.exe from Releases; a manifest needs version, url and sha256.",
         ["更新源（JSON 清单地址）"] = "Update source (JSON manifest URL)",
         ["启动时检查更新"] = "Check for updates on startup",
         ["保存并检查"] = "Save and check",

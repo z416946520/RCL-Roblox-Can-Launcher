@@ -713,7 +713,7 @@ public static class RobloxDeployment
                 channel,
                 versionGuid,
                 installedAt = DateTime.Now.ToString("O"),
-                by = "RCL 1.3.0"
+                by = "RCL " + UpdateService.CurrentVersion
             }, JsonOpts.Write), new UTF8Encoding(false));
         }
         catch (Exception ex)

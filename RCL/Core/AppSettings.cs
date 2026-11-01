@@ -21,6 +21,10 @@ public sealed class AppSettings
     public bool FirstRun { get; set; } = true;
     public bool CheckUpdatesOnStartup { get; set; } = true;
     public string UpdateManifestUrl { get; set; } = "";
+    /// <summary>GitHub owner/repo used when no custom manifest URL is set.</summary>
+    public string GitHubRepo { get; set; } = "z416946520/RCL-Roblox-Can-Launcher";
+    /// <summary>Auto (下载并重启) | Prompt (先询问) | Manual (只手动检查)。</summary>
+    public string RclUpdateMode { get; set; } = "Auto";
     /// <summary>Auto (立即更新) | Delay (一天后更新) | Manual (手动)。</summary>
     public string RobloxUpdateMode { get; set; } = "Auto";
     /// <summary>UI language: "zh" (source) or "en" (translated by Localization).</summary>
