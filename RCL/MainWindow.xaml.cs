@@ -236,13 +236,28 @@ public partial class MainWindow : Window
                 ? options.PlaceId
                 : options.PlaceId is > 0 ? options.PlaceId : game?.PlaceId;
             string? jobId = options.IsProtocolLaunch ? options.JobId : options.JobId ?? game?.JobId;
-            var result = await LaunchService.LaunchAsync(
-                inst,
-                placeId,
-                jobId,
-                options.IsProtocolLaunch ? null : game?.Title,
-                inst.MultiInstance,
-                deeplink: options.IsProtocolLaunch ? options.Deeplink : null);
+            var progressWindow = new Dialogs.LaunchProgressWindow(RobloxInstall.Resolve(inst.VersionPath))
+            {
+                Owner = this
+            };
+            progressWindow.Show();
+            LaunchResult result;
+            try
+            {
+                result = await LaunchService.LaunchAsync(
+                    inst,
+                    placeId,
+                    jobId,
+                    options.IsProtocolLaunch ? null : game?.Title,
+                    inst.MultiInstance,
+                    progressWindow.Report,
+                    progressWindow.Token,
+                    deeplink: options.IsProtocolLaunch ? options.Deeplink : null);
+            }
+            finally
+            {
+                progressWindow.CloseSafely();
+            }
 
             ShowToast(result.SafeFallback
                 ? $"{inst.Name} 已用安全启动拉起（PID {result.Session.Pid}）"

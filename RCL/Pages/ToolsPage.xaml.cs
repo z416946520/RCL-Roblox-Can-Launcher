@@ -223,17 +223,30 @@ public partial class ToolsPage : UserControl
             !DialogService.Confirm("Roblox 已经在运行。继续会尝试再打开一个客户端。\n\n仍然加入吗？", "Roblox 正在运行"))
             return;
 
+        var progressWindow = new LaunchProgressWindow(RobloxInstall.Resolve(inst.VersionPath));
+        try { progressWindow.Owner = Window.GetWindow(this); } catch { }
+        progressWindow.Show();
         try
         {
             QueryStatus.Text = $"正在加入 {server.Id[..Math.Min(8, server.Id.Length)]}…";
-            var result = await LaunchService.LaunchAsync(inst, _placeId, server.Id, _gameName, multi);
+            var result = await LaunchService.LaunchAsync(inst, _placeId, server.Id, _gameName, multi,
+                progressWindow.Report, progressWindow.Token);
             QueryStatus.Text = $"已加入（PID {result.Session.Pid}）";
             MainWindowHost?.ShowToast($"{inst.Name} 已加入服务器 {server.PlayersDisplay}");
+        }
+        catch (OperationCanceledException)
+        {
+            QueryStatus.Text = "已取消";
+            Log.Info("用户取消了加入：" + inst.Name);
         }
         catch (Exception ex)
         {
             Log.Error("加入服务器失败", ex);
             DialogService.Error(ex is LaunchException ? ex.Message : "加入失败：\n" + ex.Message, "加入失败");
+        }
+        finally
+        {
+            progressWindow.CloseSafely();
         }
     }
 

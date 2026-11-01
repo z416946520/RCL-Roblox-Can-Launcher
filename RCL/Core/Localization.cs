@@ -33,6 +33,8 @@ public static class Loc
         ["正在打开 Roblox 登录页面…"] = "Opening the Roblox sign-in page…",
         ["登录完成后点「完成添加」。"] = "Click \u201cFinish\u201d once you are signed in.",
         ["取消"] = "Cancel",
+        ["正在取消…"] = "Cancelling…",
+        ["正在与 Roblox 建立连接…"] = "Connecting to Roblox…",
         ["完成添加"] = "Finish",
         ["Roblox 账号"] = "Roblox account",
         ["管理账号"] = "Manage accounts",

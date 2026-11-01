@@ -342,6 +342,9 @@ public partial class LaunchPage : UserControl
             return;
 
         bool multi = inst.MultiInstance;
+        var progressWindow = new LaunchProgressWindow(RobloxInstall.Resolve(inst.VersionPath));
+        try { progressWindow.Owner = Window.GetWindow(this); } catch { }
+        progressWindow.Show();
         SetBusy(true);
         try
         {
@@ -350,7 +353,8 @@ public partial class LaunchPage : UserControl
                 StatusText.Text = status;
                 StatusText.Foreground = (Brush)FindResource("BrushAccentDark");
                 AppendLog(status);
-            });
+                progressWindow.Report(status);
+            }, progressWindow.Token);
 
             var detail = result.SafeFallback
                 ? "安全启动"
@@ -370,6 +374,13 @@ public partial class LaunchPage : UserControl
             if (AppSettings.Current.CloseAfterLaunch)
                 Application.Current.MainWindow?.Close();
         }
+        catch (OperationCanceledException)
+        {
+            Log.Info("用户取消了启动：" + inst.Name);
+            StatusText.Text = "已取消";
+            StatusText.Foreground = (Brush)FindResource("BrushTextMuted");
+            AppendLog("启动已取消");
+        }
         catch (Exception ex)
         {
             Log.Error("启动失败", ex);
@@ -380,6 +391,7 @@ public partial class LaunchPage : UserControl
         }
         finally
         {
+            progressWindow.CloseSafely();
             SetBusy(false);
             UpdateDetail();
         }

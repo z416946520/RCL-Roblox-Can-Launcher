@@ -886,20 +886,35 @@ public partial class InstancesPage : UserControl
         }
 
         LaunchStatus.Text = "准备启动…";
+        var progressWindow = new LaunchProgressWindow(RobloxInstall.Resolve(inst.VersionPath));
+        try { progressWindow.Owner = Window.GetWindow(this); } catch { }
+        progressWindow.Show();
         try
         {
-            var result = await LaunchService.LaunchAsync(inst, null, null, null, multi,
-                s => LaunchStatus.Text = s);
+            var result = await LaunchService.LaunchAsync(inst, null, null, null, multi, s =>
+            {
+                LaunchStatus.Text = s;
+                progressWindow.Report(s);
+            }, progressWindow.Token);
             LaunchStatus.Text = $"已启动 · PID {result.Session.Pid}";
             MainWindowHost?.ShowToast($"{inst.Name} 已启动（PID {result.Session.Pid}）");
             if (AppSettings.Current.CloseAfterLaunch)
                 Application.Current.MainWindow?.Close();
+        }
+        catch (OperationCanceledException)
+        {
+            LaunchStatus.Text = "已取消";
+            Log.Info("用户取消了启动：" + inst.Name);
         }
         catch (Exception ex)
         {
             LaunchStatus.Text = "启动失败";
             Log.Error("实例页启动失败", ex);
             DialogService.Error(ex is LaunchException ? ex.Message : "启动失败：\n" + ex.Message, "启动失败");
+        }
+        finally
+        {
+            progressWindow.CloseSafely();
         }
     }
 

@@ -19,7 +19,13 @@ public sealed class RobloxVersion
         ? FolderName[8..]
         : FolderName;
 
-    public string DisplayName => string.IsNullOrWhiteSpace(Version) ? ShortTag : Version;
+    /// <summary>
+    /// Roblox's product version is stored comma separated ("0, 745, 0, 7451137"); people expect
+    /// the dotted form the website and the official launcher show.
+    /// </summary>
+    public string DisplayName => string.IsNullOrWhiteSpace(Version)
+        ? ShortTag
+        : Version.Replace(", ", ".").Replace(',', '.');
 
     public string Detail => $"{FolderName} · {Modified:yyyy-MM-dd}" +
                             (string.IsNullOrWhiteSpace(Source) ? "" : $" · {Source}");

@@ -250,14 +250,14 @@ public static class LaunchService
                 throw new LaunchException(ex.Message);
             }
 
-            var attempt = await StartAsync(exe, launchDir, argumentList, status);
+            var attempt = await StartAsync(exe, launchDir, argumentList, status, cancellationToken);
             bool safeFallback = false;
 
             if (attempt.Watch.Health == LaunchHealth.Crashed)
             {
                 Log.Warn($"Roblox 启动即崩溃（退出码 {FormatExitCode(attempt.Watch.ExitCode)}），按原样重试一次");
                 status?.Invoke("客户端启动崩溃，按原样重试…");
-                attempt = await StartAsync(exe, launchDir, argumentList, status);
+                attempt = await StartAsync(exe, launchDir, argumentList, status, cancellationToken);
             }
 
             if (attempt.Watch.Health == LaunchHealth.Crashed)
@@ -268,7 +268,7 @@ public static class LaunchService
                 ModsService.Restore(instance, version.Directory);
                 flagsApplied = 0;
                 modsApplied = 0;
-                attempt = await StartAsync(version.ExePath, version.Directory, argumentList, status);
+                attempt = await StartAsync(version.ExePath, version.Directory, argumentList, status, cancellationToken);
                 if (attempt.Watch.Health != LaunchHealth.Crashed)
                 {
                     exe = version.ExePath;
@@ -285,7 +285,7 @@ public static class LaunchService
                 Log.Warn("安全启动仍然崩溃，重置 Roblox 本地缓存后重试");
                 status?.Invoke("仍然崩溃，重置 Roblox 本地缓存后重试…");
                 var cacheBackup = RobloxCacheReset.MoveAside();
-                attempt = await StartAsync(version.ExePath, version.Directory, argumentList, status);
+                attempt = await StartAsync(version.ExePath, version.Directory, argumentList, status, cancellationToken);
                 if (attempt.Watch.Health != LaunchHealth.Crashed)
                 {
                     exe = version.ExePath;
@@ -372,7 +372,8 @@ public static class LaunchService
         string exe,
         string launchDir,
         List<string> argumentList,
-        Action<string>? status)
+        Action<string>? status,
+        CancellationToken cancellationToken)
     {
         // Snapshot first: a log written after this point belongs to the launch below.
         var existingLogs = StartupCrashGuard.SnapshotLogs();
@@ -400,9 +401,33 @@ public static class LaunchService
         if (process is null)
             throw new LaunchException("Roblox 没有返回进程句柄，启动失败。");
 
+        if (cancellationToken.IsCancellationRequested)
+        {
+            TryKill(process);
+            throw new OperationCanceledException(cancellationToken);
+        }
+
         status?.Invoke("等待客户端就绪…");
-        var watch = await StartupCrashGuard.WaitAsync(process, existingLogs, DateTime.UtcNow);
+        var watch = await StartupCrashGuard.WaitAsync(process, existingLogs, DateTime.UtcNow, null, cancellationToken);
+        if (cancellationToken.IsCancellationRequested)
+        {
+            TryKill(process);
+            throw new OperationCanceledException(cancellationToken);
+        }
         return new LaunchAttempt(process, watch);
+    }
+
+    private static void TryKill(Process process)
+    {
+        try
+        {
+            if (!process.HasExited)
+                process.Kill(true);
+        }
+        catch (Exception ex)
+        {
+            Log.Warn("取消启动时结束进程失败：" + ex.Message);
+        }
     }
 
     private static string BuildCrashMessage(StartupWatchResult watch, IReadOnlyList<string>? disabledMods = null)
