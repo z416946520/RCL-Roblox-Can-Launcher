@@ -76,23 +76,42 @@ public partial class LaunchPage : UserControl
         RefreshAccountCard();
     }
 
+    private sealed record AccountOption(RobloxAccount Account, string Label);
+
+    private static string MaskedLabel(RobloxAccount account)
+    {
+        var id = account.UserId.ToString();
+        var tail = id.Length >= 4 ? id[^4..] : id;
+        return tail.Length == 0 ? "\u2022\u2022\u2022" : "\u2022\u2022\u2022" + tail;
+    }
+
     private void RefreshAccountCard()
     {
         if (AccountCombo is null)
             return;
         _accountRefreshing = true;
-        AccountCombo.ItemsSource = AccountService.Accounts;
+
+        var anonymous = AppSettings.Current.AnonymousAccount;
+        var options = AccountService.Accounts
+            .Select(account => new AccountOption(account, anonymous ? MaskedLabel(account) : account.Display))
+            .ToList();
         var active = AccountService.ActiveAccount;
-        AccountCombo.SelectedItem = active;
-        AccountCombo.Visibility = AccountService.Accounts.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
-        AccountAddButton.Visibility = AccountService.Accounts.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
+
+        AccountCombo.ItemsSource = options;
+        AccountCombo.SelectedItem = options.FirstOrDefault(option => ReferenceEquals(option.Account, active));
+        AccountCombo.Visibility = options.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
+        PrivacyButton.Visibility = options.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
+        AccountAddButton.Visibility = options.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
+        RefreshPrivacyButton(anonymous);
 
         if (active is not null)
         {
-            AccountName.Text = active.Display;
-            AccountSub.Text = active.Subtitle + " · 启动实例时自动使用";
-            AccountInitial.Text = active.Initial;
-            if (active.HasAvatar)
+            AccountName.Text = anonymous ? Loc.T("账号已隐藏") : active.Display;
+            AccountSub.Text = anonymous
+                ? "\u2022\u2022\u2022\u2022\u2022\u2022"
+                : active.Subtitle + " \u00b7 " + Loc.T("启动实例时自动使用");
+            AccountInitial.Text = anonymous ? "?" : active.Initial;
+            if (active.HasAvatar && !anonymous)
             {
                 try
                 {
@@ -125,16 +144,33 @@ public partial class LaunchPage : UserControl
         _accountRefreshing = false;
     }
 
+    private void RefreshPrivacyButton(bool anonymous)
+    {
+        PrivacyIcon.Foreground = (Brush)FindResource(anonymous ? "BrushAccent" : "BrushTextSecondary");
+        PrivacyButton.ToolTip = Loc.T(anonymous ? "显示账号信息" : "匿名显示账号");
+    }
+
+    private void ToggleAnonymous_Click(object sender, RoutedEventArgs e)
+    {
+        AppSettings.Current.AnonymousAccount = !AppSettings.Current.AnonymousAccount;
+        AppSettings.Save();
+        RefreshAccountCard();
+        MainWindowHost?.ShowToast(AppSettings.Current.AnonymousAccount
+            ? Loc.T("已开启账号匿名显示")
+            : Loc.T("已显示账号信息"));
+    }
+
     private void AccountCombo_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
-        if (_accountRefreshing || AccountCombo.SelectedItem is not RobloxAccount account)
+        if (_accountRefreshing || AccountCombo.SelectedItem is not AccountOption option)
             return;
+        var account = option.Account;
         if (ReferenceEquals(account, AccountService.ActiveAccount))
             return;
         try
         {
             AccountService.Switch(account);
-            MainWindowHost?.ShowToast($"已切换账号：{account.Display}（新启动的客户端生效）");
+            MainWindowHost?.ShowToast($"已切换账号：{option.Label}（新启动的客户端生效）");
         }
         catch (Exception ex)
         {

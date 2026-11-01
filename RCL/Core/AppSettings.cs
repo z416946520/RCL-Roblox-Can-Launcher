@@ -32,6 +32,8 @@ public sealed class AppSettings
     public bool OptimizeRoblox { get; set; }
     public int RobloxMemoryLimitMb { get; set; }
     public int RobloxMaxCores { get; set; }
+    /// <summary>Hide the account name/avatar on the launch page (screenshots, streaming).</summary>
+    public bool AnonymousAccount { get; set; }
     public bool DiscordRpcEnabled { get; set; }
     public string DiscordClientId { get; set; } = "";
     public bool DiscordShowButtons { get; set; } = true;

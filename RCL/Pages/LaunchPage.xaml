@@ -39,9 +39,16 @@
                     <TextBlock x:Name="AccountSub" Text="登录后所有实例都会使用这个账号"
                                Style="{StaticResource TinyText}" TextAlignment="Center" TextWrapping="Wrap"
                                Margin="0,4,0,0"/>
-                    <ComboBox x:Name="AccountCombo" Style="{StaticResource PclComboBox}" Width="190" Height="30"
-                              Margin="0,14,0,0" HorizontalAlignment="Center"
-                              SelectionChanged="AccountCombo_SelectionChanged"/>
+                    <StackPanel Orientation="Horizontal" Margin="0,14,0,0" HorizontalAlignment="Center">
+                        <ComboBox x:Name="AccountCombo" Style="{StaticResource PclComboBox}" Width="190" Height="30"
+                                  DisplayMemberPath="Label"
+                                  SelectionChanged="AccountCombo_SelectionChanged"/>
+                        <Button x:Name="PrivacyButton" Style="{StaticResource IconButton}" Width="30" Height="30"
+                                Margin="6,0,0,0" Click="ToggleAnonymous_Click">
+                            <TextBlock x:Name="PrivacyIcon" Text="&#xE890;" FontFamily="Segoe MDL2 Assets"
+                                       FontSize="14"/>
+                        </Button>
+                    </StackPanel>
                     <Button x:Name="AccountAddButton" Content="添加账号" Style="{StaticResource PclButton}"
                             Height="32" Width="150" Margin="0,14,0,0" HorizontalAlignment="Center"
                             Click="ManageAccounts_Click" Visibility="Collapsed"/>
