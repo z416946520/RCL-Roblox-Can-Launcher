@@ -1085,6 +1085,7 @@ body.nav-open .nav-toggle span::after {
     border-radius: 14px;
     border: 1px solid var(--line);
     background: #0a0e14;
+    z-index: 60;
     box-shadow: 0 24px 60px rgba(0, 0, 0, 0.5);
     backdrop-filter: blur(18px);
     -webkit-backdrop-filter: blur(18px);
