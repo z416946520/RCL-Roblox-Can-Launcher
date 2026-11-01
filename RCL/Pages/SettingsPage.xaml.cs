@@ -315,6 +315,22 @@ public partial class SettingsPage : UserControl
         }
     }
 
+    private void Diagnostics_Click(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            var path = SupportBundle.Create();
+            MainWindowHost?.ShowToast("诊断包已生成");
+            if (DialogService.Confirm($"诊断包已生成：\n{path}\n\n打开所在文件夹？", "诊断包"))
+                OpenPath(Path.GetDirectoryName(path)!);
+        }
+        catch (Exception ex)
+        {
+            Log.Error("导出诊断包失败", ex);
+            DialogService.Error("导出诊断包失败：\n" + ex.Message, "诊断包");
+        }
+    }
+
     private void ResetSettings_Click(object sender, RoutedEventArgs e)
     {
         if (!DialogService.Confirm(

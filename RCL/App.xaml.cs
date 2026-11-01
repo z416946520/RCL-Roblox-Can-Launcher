@@ -14,7 +14,9 @@ public partial class App : Application
         base.OnStartup(e);
 
         AppPaths.Ensure();
+        Log.Start();
         Log.Info("==== RCL 1.3.0 启动 ====");
+        SecurityHardening.Apply();
         AppSettings.Load();
         ThemeManager.Apply(AppSettings.Current.AccentHex);
         InstanceStore.Load();

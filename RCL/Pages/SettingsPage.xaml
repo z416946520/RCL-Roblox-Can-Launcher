@@ -419,6 +419,8 @@
                                         Margin="8,0,0,0" Click="OpenLog_Click"/>
                                 <Button Content="备份配置…" Style="{StaticResource PclButton}" Height="30"
                                         Margin="8,0,0,0" Click="Backup_Click"/>
+                                <Button Content="导出诊断包" Style="{StaticResource GhostButton}" Height="30"
+                                        Margin="8,0,0,0" Click="Diagnostics_Click"/>
                             </StackPanel>
                         </StackPanel>
                     </Border>

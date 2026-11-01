@@ -279,6 +279,28 @@ public static class LaunchService
             }
 
             if (attempt.Watch.Health == LaunchHealth.Crashed)
+            {
+                // Last resort before giving up: Roblox's own asset cache can be the thing that
+                // keeps crashing the client. Moving it aside keeps login and settings intact.
+                Log.Warn("安全启动仍然崩溃，重置 Roblox 本地缓存后重试");
+                status?.Invoke("仍然崩溃，重置 Roblox 本地缓存后重试…");
+                var cacheBackup = RobloxCacheReset.MoveAside();
+                attempt = await StartAsync(version.ExePath, version.Directory, argumentList, status);
+                if (attempt.Watch.Health != LaunchHealth.Crashed)
+                {
+                    exe = version.ExePath;
+                    launchDir = version.Directory;
+                    usedSlot = false;
+                    safeFallback = true;
+                    Log.Info(cacheBackup is null
+                        ? "缓存重置后启动成功（没有找到可移动的缓存）"
+                        : "缓存重置后启动成功，旧缓存保留在 " + cacheBackup);
+                    if (cacheBackup is not null)
+                        status?.Invoke("缓存重置后启动成功");
+                }
+            }
+
+            if (attempt.Watch.Health == LaunchHealth.Crashed)
                 throw new LaunchException(BuildCrashMessage(attempt.Watch));
 
             var process = attempt.Process;
@@ -360,7 +382,8 @@ public static class LaunchService
     private static string BuildCrashMessage(StartupWatchResult watch)
     {
         var log = string.IsNullOrEmpty(watch.LogFile) ? "" : "\n日志：" + watch.LogFile;
-        return "Roblox 在启动阶段连续崩溃（退出码 " + FormatExitCode(watch.ExitCode) + "），安全启动也没能拉起。\n" +
+        return "Roblox 在启动阶段连续崩溃（退出码 " + FormatExitCode(watch.ExitCode) +
+               "），还原修改、重置本地缓存都没能拉起。\n" +
                "这通常来自客户端本体、显卡驱动或注入游戏的其他程序，而不是 RCL 写入的设置。" +
                "可以试试：更新显卡驱动、关闭覆盖层与杀毒注入，或重装一次客户端。" + log;
     }
