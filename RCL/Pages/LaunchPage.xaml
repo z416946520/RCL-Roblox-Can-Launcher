@@ -1,0 +1,245 @@
+<UserControl x:Class="RCL.Pages.LaunchPage"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             FontFamily="{DynamicResource AppFont}" UseLayoutRounding="True" SnapsToDevicePixels="True">
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="300"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+
+        <!-- Left: account + launch, mirrors PCL's launch left panel -->
+        <Border Grid.Column="0" Background="{DynamicResource BrushSidebar}" BorderBrush="{DynamicResource BrushBorder}"
+                BorderThickness="0,0,1,0">
+            <Grid Margin="20,18,20,18">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <Grid Grid.Row="0">
+                    <TextBlock Text="Roblox 账号" FontSize="12" Foreground="{DynamicResource BrushTextMuted}"
+                               VerticalAlignment="Center"/>
+                    <Button Content="管理账号" Style="{StaticResource GhostButton}" Height="26" Padding="8,0"
+                            FontSize="11.5" HorizontalAlignment="Right" VerticalAlignment="Center"
+                            Click="ManageAccounts_Click"/>
+                </Grid>
+
+                <StackPanel Grid.Row="1" VerticalAlignment="Center" Margin="0,10,0,10">
+                    <Border x:Name="AccountAvatar" Width="86" Height="86" CornerRadius="43"
+                            Background="{DynamicResource BrushAccentSoft}" HorizontalAlignment="Center">
+                        <TextBlock x:Name="AccountInitial" Text="R" FontSize="30" FontWeight="SemiBold"
+                                   Foreground="{DynamicResource BrushAccentDark}"
+                                   HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
+                    <TextBlock x:Name="AccountName" Text="未登录 Roblox" FontSize="17" FontWeight="SemiBold"
+                               HorizontalAlignment="Center" TextTrimming="CharacterEllipsis"
+                               MaxWidth="240" Margin="0,14,0,0"/>
+                    <TextBlock x:Name="AccountSub" Text="登录后所有实例都会使用这个账号"
+                               Style="{StaticResource TinyText}" TextAlignment="Center" TextWrapping="Wrap"
+                               Margin="0,4,0,0"/>
+                    <ComboBox x:Name="AccountCombo" Style="{StaticResource PclComboBox}" Width="190" Height="30"
+                              Margin="0,14,0,0" HorizontalAlignment="Center"
+                              SelectionChanged="AccountCombo_SelectionChanged"/>
+                    <Button x:Name="AccountAddButton" Content="添加账号" Style="{StaticResource PclButton}"
+                            Height="32" Width="150" Margin="0,14,0,0" HorizontalAlignment="Center"
+                            Click="ManageAccounts_Click" Visibility="Collapsed"/>
+                </StackPanel>
+
+                <StackPanel Grid.Row="2">
+                    <Button x:Name="LaunchButton" Style="{StaticResource BigLaunchButton}" Height="54"
+                            Click="Launch_Click">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="&#xE768;" FontFamily="Segoe MDL2 Assets" FontSize="17"
+                                       Foreground="White" VerticalAlignment="Center" Margin="0,1,10,0"/>
+                            <TextBlock x:Name="LaunchButtonText" Text="启动 Roblox" FontSize="17"
+                                       FontWeight="SemiBold" Foreground="White" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+
+                    <TextBlock x:Name="CurrentInstanceText" Text="默认实例" FontSize="13" FontWeight="SemiBold"
+                               HorizontalAlignment="Center" TextTrimming="CharacterEllipsis" MaxWidth="250"
+                               Margin="0,10,0,0"/>
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,2,0,0">
+                        <TextBlock x:Name="VersionInfoText" Style="{StaticResource TinyText}"
+                                   TextTrimming="CharacterEllipsis" MaxWidth="210" VerticalAlignment="Center"/>
+                        <Border x:Name="ModeTag" Style="{StaticResource TagBorder}" Margin="6,0,0,0"
+                                VerticalAlignment="Center">
+                            <TextBlock x:Name="ModeTagText" Text="单实例" Style="{StaticResource TagText}"/>
+                        </Border>
+                    </StackPanel>
+
+                    <Grid Margin="0,12,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <Button Content="选择实例" Style="{StaticResource PclButton}" Height="35" Margin="0,0,5,0"
+                                Click="SelectInstance_Click"/>
+                        <Button Grid.Column="1" Content="实例设置" Style="{StaticResource PclButton}" Height="35"
+                                Margin="5,0,0,0" Click="EditInstance_Click"/>
+                    </Grid>
+
+                    <CheckBox x:Name="MultiCheck" Content="允许多开" Style="{StaticResource PclCheckBox}"
+                              Click="MultiCheck_Click" FontSize="12.5" Margin="0,10,0,0"/>
+
+                    <TextBlock x:Name="StatusText" Text="就绪" FontSize="11.5"
+                               Foreground="{DynamicResource BrushTextMuted}" Margin="0,6,0,0"
+                               TextAlignment="Center" TextTrimming="CharacterEllipsis"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- Right: PCL-style cards -->
+        <Grid Grid.Column="1">
+            <ScrollViewer x:Name="RightScroll" Style="{StaticResource PageScroll}">
+                <StackPanel Margin="25,22,25,10">
+                    <!-- Roblox missing -->
+                    <Border x:Name="MissingRobloxCard" Style="{StaticResource Card}" Background="{DynamicResource BrushWarningSoft}"
+                            BorderBrush="#F6D9A6" Padding="16,13" Margin="0,0,0,15" Visibility="Collapsed">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <StackPanel>
+                                <TextBlock Text="没有检测到 Roblox 客户端" FontSize="13" FontWeight="SemiBold"
+                                           Foreground="#9A6200"/>
+                                <TextBlock Text="先到「下载」页安装官方客户端，或导入一个已有版本后再启动。"
+                                           FontSize="12" Foreground="#9A6200" Margin="0,3,0,0"/>
+                            </StackPanel>
+                            <Button Grid.Column="1" Content="前往下载" Style="{StaticResource PclButton}" Height="30"
+                                    VerticalAlignment="Center" Click="GoDownload_Click"/>
+                        </Grid>
+                    </Border>
+
+                    <!-- Quick join -->
+                    <Border Style="{StaticResource Card}" Padding="20,17,20,17" Margin="0,0,0,15">
+                        <StackPanel>
+                            <TextBlock Text="快速加入" Style="{StaticResource CardTitle}"/>
+                            <TextBlock Text="粘贴游戏链接或 Place ID 直接启动，不必先打开 Roblox 主页。"
+                                       Style="{StaticResource MutedText}" FontSize="12" Margin="0,4,0,0"/>
+                            <Grid Margin="0,12,0,0">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <Button x:Name="JoinButton" Content="加入游戏…" Style="{StaticResource PclButton}"
+                                        Height="32" Margin="0,0,5,0" Click="Join_Click"/>
+                                <Button x:Name="RejoinButton" Grid.Column="1" Content="重新加入上次游戏"
+                                        Style="{StaticResource PclButton}" Height="32" Margin="5,0,0,0"
+                                        Click="Rejoin_Click"/>
+                            </Grid>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Running sessions -->
+                    <Border x:Name="SessionsCard" Style="{StaticResource Card}" Padding="20,17,20,15"
+                            Margin="0,0,0,15" Visibility="Collapsed">
+                        <StackPanel>
+                            <Grid>
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="正在运行" Style="{StaticResource CardTitle}"/>
+                                    <Border Style="{StaticResource TagBorder}" Background="#E8F5EC" Margin="8,0,0,0">
+                                        <TextBlock x:Name="SessionCountText" Text="0" FontSize="10" Foreground="#1F8A4C"/>
+                                    </Border>
+                                </StackPanel>
+                                <Button Content="全部结束" Style="{StaticResource GhostButton}" Height="26" Padding="8,0"
+                                        HorizontalAlignment="Right" Click="KillAll_Click"/>
+                            </Grid>
+                            <ItemsControl x:Name="SessionsList" Margin="0,8,0,0">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Grid Margin="0,5">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+                                            <StackPanel VerticalAlignment="Center">
+                                                <TextBlock Text="{Binding Title}" FontSize="12.5" FontWeight="SemiBold"
+                                                           TextTrimming="CharacterEllipsis"/>
+                                                <StackPanel Orientation="Horizontal" Margin="0,1,0,0">
+                                                    <TextBlock Text="{Binding InstanceName}" FontSize="11"
+                                                               Foreground="{DynamicResource BrushTextMuted}"/>
+                                                    <TextBlock Text="{Binding Pid, StringFormat=  ·  PID {0}}" FontSize="11"
+                                                               Foreground="{DynamicResource BrushTextMuted}"/>
+                                                </StackPanel>
+                                            </StackPanel>
+                                            <TextBlock Grid.Column="1" Text="{Binding Elapsed}" FontSize="12"
+                                                       VerticalAlignment="Center" Margin="12,0,12,0"
+                                                       Foreground="{DynamicResource BrushAccentDark}"/>
+                                            <Button Grid.Column="2" Content="结束" Style="{StaticResource SmallButton}"
+                                                    Height="26" Tag="{Binding}" Click="KillSession_Click"/>
+                                        </Grid>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Last game -->
+                    <Border x:Name="LastGameCard" Style="{StaticResource Card}" Padding="20,17,20,17"
+                            Margin="0,0,0,15">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <StackPanel>
+                                <TextBlock Text="最近游玩" Style="{StaticResource CardTitle}"/>
+                                <TextBlock x:Name="LastGameName" Text="还没有加入过游戏" FontSize="12.5" Margin="0,5,0,0"
+                                           Foreground="{DynamicResource BrushText}" TextTrimming="CharacterEllipsis"/>
+                                <TextBlock x:Name="LastGameMeta" Style="{StaticResource TinyText}" Margin="0,2,0,0"/>
+                            </StackPanel>
+                            <Button Grid.Column="1" x:Name="LastGameButton" Content="查看游戏" Style="{StaticResource SmallButton}"
+                                    Height="28" VerticalAlignment="Center" Click="Rejoin_Click"/>
+                        </Grid>
+                    </Border>
+
+                    <!-- Launch log, PCL's right panel signature -->
+                    <Border Style="{StaticResource Card}" Padding="20,17,20,15" Margin="0,0,0,15">
+                        <StackPanel>
+                            <Grid>
+                                <TextBlock Text="启动日志" Style="{StaticResource CardTitle}"/>
+                                <TextBlock Text="仅记录本次打开 RCL 后的操作" Style="{StaticResource TinyText}"
+                                           HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                            </Grid>
+                            <ScrollViewer x:Name="LogScroll" MaxHeight="190" VerticalScrollBarVisibility="Auto"
+                                          HorizontalScrollBarVisibility="Disabled" Margin="0,10,0,0">
+                                <TextBlock x:Name="LaunchLogText" Text="就绪。" FontSize="12"
+                                           Foreground="{DynamicResource BrushTextSecondary}"
+                                           TextWrapping="Wrap" LineHeight="19"/>
+                            </ScrollViewer>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Hint -->
+                    <Border Style="{StaticResource Card}" Background="{DynamicResource BrushAccentSoft}"
+                            BorderBrush="{DynamicResource BrushAccentBorder}" Padding="20,15,20,15">
+                        <StackPanel>
+                            <TextBlock Text="关于实例隔离" FontSize="12.5" FontWeight="SemiBold"
+                                       Foreground="{DynamicResource BrushAccentDark}"/>
+                            <TextBlock Text="每个实例拥有独立的 FastFlags、模组、启动参数与游玩时长；多开时 RCL 会为每个客户端分配独立的目录联接槽位，避免 Roblox 单例锁互相踢出。"
+                                       FontSize="12" Foreground="#2E5F9E" Margin="0,4,0,0" TextWrapping="Wrap" LineHeight="19"/>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+            </ScrollViewer>
+
+            <Border x:Name="EmptyPanel" Background="{DynamicResource BrushBackground}" Visibility="Collapsed">
+                <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Width="360">
+                    <TextBlock Text="&#xE8F1;" FontFamily="Segoe MDL2 Assets" FontSize="38"
+                               Foreground="{DynamicResource BrushAccentBorder}" HorizontalAlignment="Center"/>
+                    <TextBlock Text="还没有实例" Style="{StaticResource PageTitle}" HorizontalAlignment="Center"
+                               Margin="0,14,0,6"/>
+                    <TextBlock Text="创建一个实例来保存你的版本、模组与启动设置。" Style="{StaticResource MutedText}"
+                               HorizontalAlignment="Center" TextAlignment="Center"/>
+                    <Button Content="新建实例" Style="{StaticResource PrimaryButton}" Height="34" Margin="0,18,0,0"
+                            HorizontalAlignment="Center" MinWidth="140" Click="NewInstance_Click"/>
+                </StackPanel>
+            </Border>
+        </Grid>
+    </Grid>
+</UserControl>

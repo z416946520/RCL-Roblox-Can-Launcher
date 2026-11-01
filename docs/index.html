@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>RCL · Roblox Can Launcher — PCL2 风格的 Roblox 启动器</title>
+  <meta name="description" content="RCL 是一款 PCL2 界面风格的 Roblox 启动器：实例隔离、多开、Roblox 账号切换、FastFlags、执行器版本锁定与快捷启动。">
+  <meta name="theme-color" content="#06080c">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="RCL · Roblox Can Launcher">
+  <meta property="og:description" content="PCL2 的界面语言，Roblox 的启动内核。实例隔离、多开、FastFlags、账号切换与执行器版本锁定。">
+  <meta property="og:url" content="https://z416946520.github.io/RCL-Roblox-Can-Launcher/">
+  <meta property="og:image" content="https://z416946520.github.io/RCL-Roblox-Can-Launcher/assets/img/og-image.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="icon" href="assets/img/rcl-icon.png" type="image/png">
+  <link rel="apple-touch-icon" href="assets/img/apple-touch-icon.png">
+  <link rel="stylesheet" href="assets/css/style.css?v=2">
+  <script defer src="assets/js/main.js?v=2"></script>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "RCL · Roblox Can Launcher",
+    "operatingSystem": "Windows 10, Windows 11",
+    "applicationCategory": "UtilitiesApplication",
+    "description": "PCL2 风格的 Roblox 启动器，支持实例隔离、多开、FastFlags、账号切换与执行器版本锁定。",
+    "url": "https://z416946520.github.io/RCL-Roblox-Can-Launcher/",
+    "offers": { "@type": "Offer", "price": "0", "priceCurrency": "CNY" }
+  }
+  </script>
+</head>
+<body>
+  <div class="bg-grid" aria-hidden="true"></div>
+
+  <header class="site-header" id="site-header">
+    <div class="container nav">
+      <a class="brand" href="#top" aria-label="RCL 首页">
+        <img class="brand-mark" src="assets/img/rcl-icon.png" alt="RCL 图标" width="42" height="42">
+        <span class="brand-name">RCL</span>
+      </a>
+
+      <nav class="nav-links" id="nav-links" aria-label="主导航">
+        <a class="active" href="#top">首页</a>
+        <a href="#features">功能</a>
+        <a href="#screens">界面</a>
+        <a href="#download">下载</a>
+        <a href="#faq">说明</a>
+      </nav>
+
+      <div class="nav-actions">
+        <a class="btn btn-ghost btn-sm" href="https://github.com/z416946520/RCL-Roblox-Can-Launcher" target="_blank" rel="noreferrer">
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 .5C5.65.5.5 5.65.5 12c0 5.08 3.29 9.39 7.86 10.91.58.11.79-.25.79-.55 0-.27-.01-1-.01-1.96-3.2.7-3.88-1.54-3.88-1.54-.52-1.33-1.28-1.68-1.28-1.68-1.05-.72.08-.7.08-.7 1.16.08 1.77 1.19 1.77 1.19 1.03 1.76 2.7 1.25 3.36.96.1-.75.4-1.25.73-1.54-2.56-.29-5.25-1.28-5.25-5.7 0-1.26.45-2.29 1.19-3.1-.12-.29-.52-1.46.11-3.05 0 0 .97-.31 3.18 1.18a11.1 11.1 0 0 1 5.8 0c2.2-1.49 3.17-1.18 3.17-1.18.63 1.59.23 2.76.11 3.05.74.81 1.19 1.84 1.19 3.1 0 4.43-2.69 5.41-5.26 5.69.41.35.78 1.05.78 2.12 0 1.53-.01 2.76-.01 3.14 0 .3.21.67.8.55A11.5 11.5 0 0 0 23.5 12C23.5 5.65 18.35.5 12 .5Z"/></svg>
+          GitHub
+        </a>
+        <a class="btn btn-primary btn-sm" href="#download">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M4 21h16"/></svg>
+          立即下载
+        </a>
+      </div>
+
+      <button class="nav-toggle" id="nav-toggle" type="button" aria-label="展开导航" aria-expanded="false">
+        <span></span>
+      </button>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero" id="top">
+      <div class="container hero-grid">
+        <div class="hero-copy">
+          <span class="eyebrow"><span class="dot"></span> 最新版本 v1.3.0 · Windows 10/11</span>
+          <h1>
+            <span class="white">RCL</span>
+            <span class="cyan">Roblox Can</span><br>
+            <span class="cyan">Launcher</span>
+          </h1>
+          <p class="lead">
+            PCL2 的界面语言，Roblox 的启动内核。用实例隔离、多开、账号切换和 FastFlags，
+            把一个干净、可控的 Roblox 客户端留在自己手里。
+          </p>
+          <div class="hero-actions">
+            <a class="btn btn-primary" href="https://github.com/z416946520/RCL-Roblox-Can-Launcher/releases" target="_blank" rel="noreferrer">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M4 21h16"/></svg>
+              下载最新版本
+            </a>
+            <a class="btn btn-dark" href="https://github.com/z416946520/RCL-Roblox-Can-Launcher" target="_blank" rel="noreferrer">
+              <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 .5C5.65.5.5 5.65.5 12c0 5.08 3.29 9.39 7.86 10.91.58.11.79-.25.79-.55 0-.27-.01-1-.01-1.96-3.2.7-3.88-1.54-3.88-1.54-.52-1.33-1.28-1.68-1.28-1.68-1.05-.72.08-.7.08-.7 1.16.08 1.77 1.19 1.77 1.19 1.03 1.76 2.7 1.25 3.36.96.1-.75.4-1.25.73-1.54-2.56-.29-5.25-1.28-5.25-5.7 0-1.26.45-2.29 1.19-3.1-.12-.29-.52-1.46.11-3.05 0 0 .97-.31 3.18 1.18a11.1 11.1 0 0 1 5.8 0c2.2-1.49 3.17-1.18 3.17-1.18.63 1.59.23 2.76.11 3.05.74.81 1.19 1.84 1.19 3.1 0 4.43-2.69 5.41-5.26 5.69.41.35.78 1.05.78 2.12 0 1.53-.01 2.76-.01 3.14 0 .3.21.67.8.55A11.5 11.5 0 0 0 23.5 12C23.5 5.65 18.35.5 12 .5Z"/></svg>
+              查看源代码
+            </a>
+          </div>
+          <ul class="hero-points">
+            <li><span class="check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 4 4L19 6"/></svg></span>实例级隔离</li>
+            <li><span class="check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 4 4L19 6"/></svg></span>多开不互踢</li>
+            <li><span class="check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 4 4L19 6"/></svg></span>PCL2 界面</li>
+          </ul>
+        </div>
+
+        <div class="hero-art">
+          <div class="float-chip chip-version"><span class="chip-dot"></span>v1.3.0 稳定版</div>
+          <img class="hero-shot" src="assets/img/screenshot-launch.png" alt="RCL 启动页界面" width="1120" height="704" loading="eager">
+          <div class="float-chip chip-isolation"><span class="chip-dot"></span>独立实例 · 独立配置</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="features">
+      <div class="container">
+        <div class="section-head reveal">
+          <span class="pill">核心功能</span>
+          <h2>把 Roblox 的复杂，收进一个窗口</h2>
+          <p>不是又一个只负责启动的壳。RCL 把版本、账号、配置和进程真正分开，再给它们一套 PCL2 的界面。</p>
+        </div>
+
+        <div class="feature-grid">
+          <article class="feature-card reveal">
+            <span class="feature-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3 9 5-9 5-9-5 9-5Z"/><path d="m3 12 9 5 9-5"/><path d="m3 16 9 5 9-5"/></svg>
+            </span>
+            <h3>实例级隔离</h3>
+            <p>每个实例拥有独立的版本绑定、FastFlags、模组与启动参数。主号、测试服、低配模式互不影响。</p>
+          </article>
+
+          <article class="feature-card reveal">
+            <span class="feature-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="8" width="12" height="12" rx="3"/><path d="M16 8V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h3"/></svg>
+            </span>
+            <h3>多开不互踢</h3>
+            <p>单例互斥体配合目录联接槽位，让多个 Roblox 客户端同时在线。Voidstrap 已移除多开，RCL 保留并做成默认能力。</p>
+          </article>
+
+          <article class="feature-card reveal">
+            <span class="feature-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>
+            </span>
+            <h3>Roblox 账号</h3>
+            <p>网页登录添加账号，Windows DPAPI 加密保存。切换账号后，之后启动的实例会自动使用对应的 Cookie。</p>
+          </article>
+
+          <article class="feature-card reveal">
+            <span class="feature-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h8M16 7h4M4 17h4M12 17h8"/><circle cx="14" cy="7" r="2"/><circle cx="8" cy="17" r="2"/></svg>
+            </span>
+            <h3>FastFlags</h3>
+            <p>JSON 粘贴或文件导入、常用预设，以及从 Bloxstrap / Voidstrap / Froststrap / Fishstrap 一键迁移。</p>
+          </article>
+
+          <article class="feature-card reveal">
+            <span class="feature-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 4 14h7l-1 8 9-12h-7l1-8Z"/></svg>
+            </span>
+            <h3>执行器版本锁定</h3>
+            <p>读取 WEAO 的执行器支持版本，把实例锁到对应的 Roblox 版本，并按周期自动跟随更新。</p>
+          </article>
+
+          <article class="feature-card reveal">
+            <span class="feature-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M5 15c-1 2-1 4-1 5 1 0 3 0 5-1"/><path d="M9 14 4 9l4-1 3-3c3-3 6-3 8-2 0 2-1 5-4 8l-3 3-1 4-2-4Z"/><circle cx="15" cy="9" r="1.5"/></svg>
+            </span>
+            <h3>快捷启动</h3>
+            <p>exe、lnk、cmd、bat、ps1 都能放进来；读取真实图标、检测进程，重复启动前先问一句。Potassium 可一键添加。</p>
+          </article>
+        </div>
+
+        <div class="release-banner reveal">
+          <div>
+            <span class="pill">1.3.0 新能力</span>
+            <h3>自更新与 Discord 状态</h3>
+            <p>更新走你自己的 HTTPS 清单，下载后校验 SHA-256 再替换；状态卡片显示当前实例与正在玩的游戏。</p>
+          </div>
+          <div class="release-list">
+            <div>
+              <strong>自动更新</strong>
+              <span>JSON 清单 + SHA-256 校验，替换后自动重启。更新源需要你在设置里填写。</span>
+            </div>
+            <div>
+              <strong>Rich Presence</strong>
+              <span>需要你的 Discord Application ID；RCL 不内置第三方应用身份。</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="screens">
+      <div class="container">
+        <div class="section-head reveal">
+          <span class="pill">界面预览</span>
+          <h2>像 PCL2 一样干净，像启动器一样好用</h2>
+          <p>透明圆角窗口、渐变标题栏、左侧页面栏和卡片布局。界面语言来自 PCL2，功能是自己的。</p>
+        </div>
+
+        <div class="showcase-list">
+          <article class="showcase-item reveal">
+            <div class="showcase-shot" role="button" tabindex="0" data-full="assets/img/screenshot-launch.png" aria-label="查看启动页大图">
+              <img src="assets/img/screenshot-launch.png" alt="RCL 启动页：账号、实例与启动按钮" width="1120" height="704" loading="lazy">
+            </div>
+            <div class="showcase-copy">
+              <span class="num">01 / LAUNCH</span>
+              <h3>启动页</h3>
+              <p>账号、实例和大按钮在同一屏。右侧是快速加入、最近游玩与本次启动日志，不用来回切页。</p>
+              <ul>
+                <li><span class="check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 4 4L19 6"/></svg></span>账号下拉切换，当前实例直接显示版本与多开状态</li>
+                <li><span class="check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 4 4L19 6"/></svg></span>启动日志记录本次会话的每一步</li>
+              </ul>
+            </div>
+          </article>
+
+          <article class="showcase-item reveal">
+            <div class="showcase-shot" role="button" tabindex="0" data-full="assets/img/screenshot-instances.png" aria-label="查看实例与 FastFlags 大图">
+              <img src="assets/img/screenshot-instances.png" alt="RCL 实例页与 FastFlags 管理" width="1120" height="704" loading="lazy">
+            </div>
+            <div class="showcase-copy">
+              <span class="num">02 / INSTANCES</span>
+              <h3>实例与 FastFlags</h3>
+              <p>每个实例独立管理 FastFlags、模组、版本绑定和启动参数。JSON 导入、预设、从其他启动器迁移都在同一页。</p>
+              <ul>
+                <li><span class="check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 4 4L19 6"/></svg></span>写入前备份原 ClientAppSettings.json</li>
+                <li><span class="check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 4 4L19 6"/></svg></span>执行器版本跟随与手动锁定并存</li>
+              </ul>
+            </div>
+          </article>
+
+          <article class="showcase-item reveal">
+            <div class="showcase-shot" role="button" tabindex="0" data-full="assets/img/screenshot-quicklaunch.png" aria-label="查看快捷启动大图">
+              <img src="assets/img/screenshot-quicklaunch.png" alt="RCL 快捷启动页" width="1120" height="704" loading="lazy">
+            </div>
+            <div class="showcase-copy">
+              <span class="num">03 / QUICK LAUNCH</span>
+              <h3>快捷启动</h3>
+              <p>把常用的 exe、脚本和 Potassium 放在一页。图标直接读取目标程序，重复启动会先确认，不会悄悄叠进程。</p>
+              <ul>
+                <li><span class="check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 4 4L19 6"/></svg></span>支持 .exe / .lnk / .cmd / .bat / .ps1</li>
+                <li><span class="check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 4 4L19 6"/></svg></span>进程检测、管理员运行与工作目录配置</li>
+              </ul>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="download">
+      <div class="container">
+        <div class="download-panel reveal">
+          <div>
+            <span class="pill">下载</span>
+            <h2>RCL 1.3.0</h2>
+            <p>Windows 10/11 x64 · 单文件自包含 · 不需要单独安装 .NET 运行时。源码与构建产物都在 GitHub。</p>
+            <div class="version-line">
+              <span>v1.3.0</span>
+              <span>Windows x64</span>
+              <span>单文件</span>
+              <span>约 64 MB</span>
+            </div>
+            <div class="download-actions">
+              <a class="btn btn-primary" href="https://github.com/z416946520/RCL-Roblox-Can-Launcher/releases" target="_blank" rel="noreferrer">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M4 21h16"/></svg>
+                前往 GitHub Releases
+              </a>
+              <a class="btn btn-dark" href="#build">从源码构建</a>
+            </div>
+            <p class="download-note">Releases 由 GitHub Actions 构建；如果暂时没有可用构建，请使用下方源码命令自行发布。</p>
+          </div>
+
+          <aside class="download-side">
+            <h3>你拿到的不是一个安装器</h3>
+            <ul>
+              <li><span class="check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 4 4L19 6"/></svg></span>绿色单文件，放到任意目录即可运行</li>
+              <li><span class="check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 4 4L19 6"/></svg></span>配置与账号保存在 <code>%APPDATA%\RCL</code></li>
+              <li><span class="check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 4 4L19 6"/></svg></span>接管 Roblox 链接前会备份原处理程序</li>
+              <li><span class="check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 4 4L19 6"/></svg></span>未签名，首次运行可能触发 SmartScreen</li>
+            </ul>
+          </aside>
+        </div>
+
+        <div class="build-card reveal" id="build">
+          <div class="build-head">
+            <h3>从源码构建</h3>
+            <button class="copy-btn" type="button" data-copy="#build-command">复制命令</button>
+          </div>
+          <pre><code id="build-command">git clone https://github.com/z416946520/RCL-Roblox-Can-Launcher.git
+cd RCL-Roblox-Can-Launcher
+dotnet publish RCL/RCL.csproj -c Release -r win-x64 --self-contained true `
+  -p:PublishSingleFile=true `
+  -p:IncludeNativeLibrariesForSelfExtract=true `
+  -p:EnableCompressionInSingleFile=true `
+  -o dist/RCL</code></pre>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="faq">
+      <div class="container">
+        <div class="section-head reveal">
+          <span class="pill">说明</span>
+          <h2>使用前需要知道的事</h2>
+          <p>RCL 是独立实现的启动器。下面这些边界说清楚，比在运行时猜要好。</p>
+        </div>
+
+        <div class="faq-grid">
+          <details class="faq-item reveal">
+            <summary>RCL 和 PCL2 是什么关系？</summary>
+            <p>RCL 使用 PCL2 的界面语言与交互结构，是独立的 Roblox 启动器，不包含 PCL2 的代码或资源，也不代表 PCL 官方。</p>
+          </details>
+          <details class="faq-item reveal">
+            <summary>会和 Roblox 官方启动器冲突吗？</summary>
+            <p>不会覆盖 Roblox 安装。RCL 读取本机版本目录，可选接管 roblox:// 链接；接管前的处理程序会备份，可随时恢复。</p>
+          </details>
+          <details class="faq-item reveal">
+            <summary>账号 Cookie 会被上传吗？</summary>
+            <p>不会。账号 Cookie 用 Windows DPAPI 加密保存在本机；Discord 与更新只使用你配置的 App ID 和更新地址。</p>
+          </details>
+          <details class="faq-item reveal">
+            <summary>为什么 Discord 和自动更新要手动配置？</summary>
+            <p>Discord Application ID 属于你的 Discord 应用，更新源属于你的发布空间。RCL 不内置第三方身份，也不依赖某个固定的更新服务器。</p>
+          </details>
+          <details class="faq-item reveal">
+            <summary>支持 Roblox Studio 吗？</summary>
+            <p>当前版本只启动 Player。Studio 的启动、模组与 RPC 支持在路线图中，尚未实装。</p>
+          </details>
+          <details class="faq-item reveal">
+            <summary>第三方执行器会封号吗？</summary>
+            <p>RCL 不注入 Roblox 进程，只负责启动、版本隔离与配置。执行器与 FastFlags 的风险由使用者承担，请遵守 Roblox 的使用条款。</p>
+          </details>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-top">
+        <div>
+          <div class="footer-brand">
+            <img src="assets/img/rcl-icon.png" alt="RCL" width="40" height="40">
+            <div>
+              <strong>RCL</strong>
+              <span>Roblox Can Launcher</span>
+            </div>
+          </div>
+          <p class="footer-about">
+            独立实现的 PCL2 风格 Roblox 启动器。界面语言参考 PCL-CE；启动与多开思路参考 Voidstrap；
+            模组与 FastFlags 体验参考 Froststrap。所有代码与资源均为独立实现。
+          </p>
+        </div>
+        <div class="footer-links">
+          <a href="https://github.com/z416946520/RCL-Roblox-Can-Launcher" target="_blank" rel="noreferrer">GitHub</a>
+          <a href="https://github.com/z416946520/RCL-Roblox-Can-Launcher/releases" target="_blank" rel="noreferrer">Releases</a>
+          <a href="https://github.com/z416946520/RCL-Roblox-Can-Launcher/issues" target="_blank" rel="noreferrer">Issues</a>
+          <a href="https://github.com/z416946520/RCL-Roblox-Can-Launcher/blob/main/README.md" target="_blank" rel="noreferrer">README</a>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <span>© 2026 RCL · Roblox Can Launcher</span>
+        <span>Not affiliated with Roblox Corporation or PCL.</span>
+      </div>
+    </div>
+  </footer>
+
+  <div class="lightbox" id="lightbox" aria-hidden="true">
+    <button class="lightbox-close" id="lightbox-close" type="button" aria-label="关闭大图">×</button>
+    <img id="lightbox-image" src="" alt="RCL 界面大图">
+  </div>
+</body>
+</html>

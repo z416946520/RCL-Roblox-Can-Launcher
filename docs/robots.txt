@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://z416946520.github.io/RCL-Roblox-Can-Launcher/sitemap.xml

@@ -1,0 +1,372 @@
+<UserControl x:Class="RCL.Pages.DownloadPage"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             FontFamily="{DynamicResource AppFont}" UseLayoutRounding="True" SnapsToDevicePixels="True">
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="250"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+
+        <Border Grid.Column="0" Background="{DynamicResource BrushSidebar}" BorderBrush="{DynamicResource BrushBorder}"
+                BorderThickness="0,0,1,0">
+            <StackPanel Margin="14,18,12,12">
+                <TextBlock Text="下载" Style="{StaticResource PageTitle}" FontSize="18" Margin="2,0,0,12"/>
+                <ListBox x:Name="NavList" Style="{StaticResource PclListBox}"
+                         ItemContainerStyle="{StaticResource PclListItem}" SelectedIndex="0"
+                         SelectionChanged="NavList_SelectionChanged">
+                    <ListBoxItem>
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="&#xE896;" FontFamily="Segoe MDL2 Assets" FontSize="14"
+                                       Foreground="{DynamicResource BrushAccent}" VerticalAlignment="Center"
+                                       Margin="0,1,9,0"/>
+                            <TextBlock Text="安装客户端" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </ListBoxItem>
+                    <ListBoxItem>
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="&#xE81C;" FontFamily="Segoe MDL2 Assets" FontSize="14"
+                                       Foreground="{DynamicResource BrushTextSecondary}" VerticalAlignment="Center"
+                                       Margin="0,1,9,0"/>
+                            <TextBlock Text="已安装版本" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </ListBoxItem>
+                    <ListBoxItem>
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="&#xE943;" FontFamily="Segoe MDL2 Assets" FontSize="14"
+                                       Foreground="{DynamicResource BrushTextSecondary}" VerticalAlignment="Center"
+                                       Margin="0,1,9,0"/>
+                            <TextBlock Text="执行器版本" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </ListBoxItem>
+                </ListBox>
+            </StackPanel>
+        </Border>
+
+        <Grid Grid.Column="1">
+            <!-- Install -->
+            <ScrollViewer x:Name="InstallPanel" Style="{StaticResource PageScroll}">
+                <StackPanel Margin="24,20,24,24">
+                    <TextBlock Text="安装 Roblox 客户端" Style="{StaticResource PageTitle}"/>
+                    <TextBlock Text="从 Roblox 官方部署接口下载客户端文件，安装到系统标准版本目录。"
+                               Style="{StaticResource PageSubtitle}" Margin="0,4,0,16"/>
+
+                    <Border Style="{StaticResource Card}" Padding="20,17,20,18" Margin="0,0,0,14">
+                        <StackPanel>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <StackPanel>
+                                    <TextBlock Text="官方部署" Style="{StaticResource CardTitle}"/>
+                                    <TextBlock x:Name="ChannelHint" Style="{StaticResource TinyText}" Margin="0,3,0,0"
+                                               Text="默认渠道与 Roblox 官方更新保持一致。"/>
+                                </StackPanel>
+                                <StackPanel Grid.Column="1" Orientation="Horizontal">
+                                    <ComboBox x:Name="ChannelCombo" Style="{StaticResource PclComboBox}" Width="150"
+                                              Height="30" SelectionChanged="ChannelCombo_SelectionChanged"/>
+                                    <Button Content="刷新" Style="{StaticResource SmallButton}" Height="30"
+                                            Margin="6,0,0,0" Click="RefreshChannel_Click"/>
+                                </StackPanel>
+                            </Grid>
+
+                            <Border Style="{StaticResource Divider}"/>
+
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <StackPanel>
+                                    <TextBlock x:Name="VersionValue" Text="正在查询…" FontSize="22" FontWeight="SemiBold"
+                                               Foreground="{DynamicResource BrushText}"/>
+                                    <TextBlock x:Name="VersionGuidValue" Style="{StaticResource TinyText}"
+                                               FontFamily="Consolas" Margin="0,3,0,0"/>
+                                </StackPanel>
+                                <Border Grid.Column="1" Style="{StaticResource TagBorder}" VerticalAlignment="Center"
+                                        x:Name="InstallStateTag" Background="#F0F0F0">
+                                    <TextBlock x:Name="InstallStateText" Text="查询中" FontSize="11"
+                                               Foreground="{DynamicResource BrushTextSecondary}"/>
+                                </Border>
+                            </Grid>
+
+                            <StackPanel Orientation="Horizontal" Margin="0,16,0,0">
+                                <Button x:Name="InstallButton" Content="下载并安装" Style="{StaticResource PrimaryButton}"
+                                        Height="34" MinWidth="120" Click="Install_Click"/>
+                                <Button x:Name="RepairButton" Content="校验并修复" Style="{StaticResource PclButton}"
+                                        Height="34" MinWidth="110" Margin="8,0,0,0" Click="Repair_Click"/>
+                                <Button Content="打开版本目录" Style="{StaticResource GhostButton}" Height="34"
+                                        Margin="8,0,0,0" Click="OpenVersionsFolder_Click"/>
+                            </StackPanel>
+
+                            <Grid x:Name="InstallProgressPanel" Margin="0,16,0,0" Visibility="Collapsed">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                </Grid.RowDefinitions>
+                                <ProgressBar x:Name="InstallProgressBar" Style="{StaticResource PclProgress}"
+                                             Maximum="100" Height="5"/>
+                                <Grid Grid.Row="1" Margin="0,7,0,0">
+                                    <TextBlock x:Name="InstallStatusText" Style="{StaticResource TinyText}"
+                                               VerticalAlignment="Center" Width="520" TextTrimming="CharacterEllipsis"/>
+                                    <Button x:Name="CancelInstallButton" Content="取消" Style="{StaticResource GhostButton}"
+                                            Height="24" Padding="8,0" HorizontalAlignment="Right" Click="CancelInstall_Click"/>
+                                </Grid>
+                            </Grid>
+                        </StackPanel>
+                    </Border>
+
+                    <Border Style="{StaticResource Card}" Padding="20,17,20,18" Margin="0,0,0,14">
+                        <StackPanel>
+                            <TextBlock Text="网络诊断" Style="{StaticResource CardTitle}" Margin="0,0,0,6"/>
+                            <TextBlock Style="{StaticResource MutedText}"
+                                       Text="下载走 Roblox 的 setup CDN。如果安装失败，先确认能访问 clientsettingscdn.roblox.com。"/>
+                            <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
+                                <Button Content="测试连接" Style="{StaticResource SmallButton}" Height="28" Click="TestNetwork_Click"/>
+                                <TextBlock x:Name="NetworkStatus" Style="{StaticResource TinyText}" Margin="10,0,0,0"
+                                           VerticalAlignment="Center" Text="尚未测试"/>
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+
+                    <Border Style="{StaticResource Card}" Background="{DynamicResource BrushAccentSoft}"
+                            BorderBrush="{DynamicResource BrushAccentBorder}" Padding="16,13">
+                        <StackPanel>
+                            <TextBlock Text="安装位置与隔离" FontSize="12.5" FontWeight="SemiBold"
+                                       Foreground="{DynamicResource BrushAccentDark}"/>
+                            <TextBlock x:Name="InstallPathText" FontSize="12" Foreground="#2E5F9E" Margin="0,4,0,0"
+                                       TextWrapping="Wrap" LineHeight="19"/>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+            </ScrollViewer>
+
+            <!-- Installed -->
+            <ScrollViewer x:Name="VersionsPanel" Style="{StaticResource PageScroll}" Visibility="Collapsed">
+                <StackPanel Margin="24,20,24,24">
+                    <TextBlock Text="已安装版本" Style="{StaticResource PageTitle}"/>
+                    <TextBlock Text="RCL 读取系统 Roblox 版本目录。不同版本可以在实例里单独绑定，实现版本隔离。"
+                               Style="{StaticResource PageSubtitle}" Margin="0,4,0,16"/>
+
+                    <Border Style="{StaticResource Card}" Padding="20,16,20,16" Margin="0,0,0,14">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <StackPanel VerticalAlignment="Center">
+                                <TextBlock Text="绑定目标实例" Style="{StaticResource CardTitle}"/>
+                                <TextBlock Style="{StaticResource TinyText}" Margin="0,2,0,0"
+                                           Text="选择实例后，点版本右侧的「绑定」即可锁定版本。"/>
+                            </StackPanel>
+                            <ComboBox x:Name="TargetInstanceCombo" Grid.Column="1" Style="{StaticResource PclComboBox}"
+                                      Width="170" Height="30" Margin="10,0,0,0" DisplayMemberPath="Name"/>
+                            <Button Grid.Column="2" Content="刷新列表" Style="{StaticResource SmallButton}" Height="30"
+                                    Margin="8,0,0,0" Click="RefreshVersions_Click"/>
+                        </Grid>
+                    </Border>
+
+                    <Border Style="{StaticResource Card}" Padding="18,15,18,15">
+                        <StackPanel>
+                            <Grid Margin="0,0,0,6">
+                                <TextBlock Text="本机版本" Style="{StaticResource CardTitle}"/>
+                                <TextBlock x:Name="VersionCountText" Style="{StaticResource TinyText}"
+                                           HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                            </Grid>
+                            <ItemsControl x:Name="InstalledVersionsList">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Grid Margin="0,6">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+                                            <StackPanel VerticalAlignment="Center">
+                                                <StackPanel Orientation="Horizontal">
+                                                    <TextBlock Text="{Binding DisplayName}" FontSize="13" FontWeight="SemiBold"/>
+                                                    <Border Style="{StaticResource TagBorder}" Margin="7,0,0,0"
+                                                            Background="#E8F5EC" Visibility="{Binding IsLatest, Converter={StaticResource BoolToVis}}">
+                                                        <TextBlock Text="最新" FontSize="10" Foreground="#1F8A4C"/>
+                                                    </Border>
+                                                    <Border Style="{StaticResource TagBorder}" Margin="6,0,0,0"
+                                                            Background="#FFF4E5" Visibility="{Binding IsRunning, Converter={StaticResource BoolToVis}}">
+                                                        <TextBlock Text="运行中" FontSize="10" Foreground="#A86500"/>
+                                                    </Border>
+                                                </StackPanel>
+                                                <TextBlock Text="{Binding Detail}" FontSize="11"
+                                                           Foreground="{DynamicResource BrushTextMuted}" Margin="0,2,0,0"/>
+                                            </StackPanel>
+                                            <TextBlock Grid.Column="1" Text="{Binding FolderName}" FontFamily="Consolas"
+                                                       FontSize="10.5" Foreground="{DynamicResource BrushTextMuted}"
+                                                       VerticalAlignment="Center" Margin="10,0,14,0"/>
+                                            <Button Grid.Column="2" Content="打开" Style="{StaticResource SmallButton}"
+                                                    Height="27" Tag="{Binding}" Click="OpenVersion_Click"/>
+                                            <Button Grid.Column="3" Content="绑定" Style="{StaticResource PclButton}"
+                                                    Height="27" Margin="6,0,0,0" Tag="{Binding}" Click="BindVersion_Click"/>
+                                        </Grid>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                            <TextBlock x:Name="VersionsEmpty" Style="{StaticResource MutedText}" Margin="0,14,0,6"
+                                       Text="没有检测到已安装的 Roblox 客户端。先到「安装客户端」下载。"/>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+            </ScrollViewer>
+
+            <!-- Executor versions (WEAO) -->
+            <ScrollViewer x:Name="PanelExecutors" Style="{StaticResource PageScroll}" Visibility="Collapsed">
+                <StackPanel Margin="24,20,24,24">
+                    <Grid>
+                        <StackPanel>
+                            <TextBlock Text="执行器支持版本" Style="{StaticResource PageTitle}"/>
+                            <TextBlock Text="数据来源 WEAO（weao.xyz）；下载后会把目标实例锁定到该版本。"
+                                       Style="{StaticResource PageSubtitle}" Margin="0,4,0,0"/>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Bottom">
+                            <Button Content="WEAO 网站" Style="{StaticResource GhostButton}" Height="30"
+                                    Click="OpenWeao_Click"/>
+                            <Button Content="刷新数据" Style="{StaticResource SmallButton}" Height="30"
+                                    Margin="6,0,0,0" Click="RefreshExecutors_Click"/>
+                        </StackPanel>
+                    </Grid>
+
+                    <Border Style="{StaticResource Card}" Padding="18,15,18,16" Margin="0,16,0,14">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <StackPanel VerticalAlignment="Center">
+                                <TextBlock Text="目标实例" Style="{StaticResource CardTitle}"/>
+                                <TextBlock x:Name="WeaoStatusText" Style="{StaticResource TinyText}" Margin="0,3,0,0"
+                                           Text="切换到本页时会从 WEAO 查询执行器支持的版本。"/>
+                                <TextBlock x:Name="WeaoUpdatedText" Style="{StaticResource TinyText}" Margin="0,2,0,0"/>
+                            </StackPanel>
+                            <ComboBox x:Name="ExecutorTargetCombo" Grid.Column="1" Style="{StaticResource PclComboBox}"
+                                      Width="170" Height="30" VerticalAlignment="Center" Margin="10,0,0,0"
+                                      DisplayMemberPath="Name"/>
+                            <Button Grid.Column="2" Content="打开下载目录" Style="{StaticResource GhostButton}"
+                                    Height="30" Margin="8,0,0,0" Click="OpenVersionsFolder_Click"/>
+                        </Grid>
+                    </Border>
+
+                    <Grid x:Name="ExecutorProgressPanel" Margin="0,0,0,12" Visibility="Collapsed">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+                        <ProgressBar x:Name="ExecutorProgressBar" Style="{StaticResource PclProgress}" Maximum="100"/>
+                        <Grid Grid.Row="1" Margin="0,7,0,0">
+                            <TextBlock x:Name="ExecutorStatusText" Style="{StaticResource TinyText}"
+                                       VerticalAlignment="Center" TextTrimming="CharacterEllipsis" Width="620"/>
+                            <Button x:Name="CancelExecutorButton" Content="取消" Style="{StaticResource GhostButton}"
+                                    Height="24" Padding="8,0" HorizontalAlignment="Right"
+                                    Click="CancelExecutor_Click"/>
+                        </Grid>
+                    </Grid>
+
+                    <Border Style="{StaticResource Card}" Padding="18,15,18,16" Margin="0,0,0,14">
+                        <StackPanel>
+                            <Grid Margin="0,0,0,6">
+                                <TextBlock Text="按支持版本分组" Style="{StaticResource CardTitle}"/>
+                                <Border Style="{StaticResource TagBorder}" HorizontalAlignment="Right">
+                                    <TextBlock x:Name="ExecutorVersionCount" Text="0 个版本"
+                                               Style="{StaticResource TagText}"/>
+                                </Border>
+                            </Grid>
+                            <ItemsControl x:Name="ExecutorVersionsList">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Grid Margin="0,7">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+                                            <StackPanel VerticalAlignment="Center">
+                                                <StackPanel Orientation="Horizontal">
+                                                    <TextBlock Text="{Binding ShortVersion}" FontSize="13"
+                                                               FontWeight="SemiBold" FontFamily="Consolas"/>
+                                                    <Border Style="{StaticResource TagBorder}" Background="#E8F5EC"
+                                                            Margin="7,0,0,0" Visibility="{Binding IsCurrent, Converter={StaticResource BoolToVis}}">
+                                                        <TextBlock Text="当前" FontSize="10" Foreground="#1F8A4C"/>
+                                                    </Border>
+                                                    <Border Style="{StaticResource TagBorder}" Background="#EAF2FE"
+                                                            Margin="6,0,0,0" Visibility="{Binding IsInstalled, Converter={StaticResource BoolToVis}}">
+                                                        <TextBlock Text="已安装" FontSize="10"
+                                                                   Foreground="{DynamicResource BrushAccentDark}"/>
+                                                    </Border>
+                                                </StackPanel>
+                                                <TextBlock Text="{Binding ExecutorsDisplay}" FontSize="11.5"
+                                                           Foreground="{DynamicResource BrushTextSecondary}"
+                                                           Margin="0,2,0,0" TextTrimming="CharacterEllipsis"/>
+                                                <TextBlock Text="{Binding Version}" FontSize="10"
+                                                           FontFamily="Consolas"
+                                                           Foreground="{DynamicResource BrushTextMuted}"
+                                                           Margin="0,1,0,0"/>
+                                            </StackPanel>
+                                            <TextBlock Grid.Column="1" Text="{Binding StateText}" FontSize="11.5"
+                                                       VerticalAlignment="Center" Margin="10,0,12,0"
+                                                       Foreground="{DynamicResource BrushTextMuted}"/>
+                                            <Button Grid.Column="2" Content="{Binding ActionText}" Style="{StaticResource SmallButton}"
+                                                    Height="28" MinWidth="92" Tag="{Binding}"
+                                                    Click="DownloadExecutorVersion_Click"/>
+                                        </Grid>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                            <TextBlock x:Name="ExecutorsEmpty" Style="{StaticResource MutedText}" Margin="0,12,0,4"
+                                       Text="没有从 WEAO 获取到版本数据。检查网络后点「刷新数据」。"/>
+                        </StackPanel>
+                    </Border>
+
+                    <Border Style="{StaticResource Card}" Padding="18,15,18,16">
+                        <StackPanel>
+                            <Grid Margin="0,0,0,6">
+                                <TextBlock Text="Windows 执行器" Style="{StaticResource CardTitle}"/>
+                                <TextBlock x:Name="ExecutorCountText" Style="{StaticResource TinyText}"
+                                           HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                            </Grid>
+                            <ItemsControl x:Name="ExecutorList">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Grid Margin="0,5">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+                                            <StackPanel VerticalAlignment="Center">
+                                                <TextBlock Text="{Binding Title}" FontSize="12.5" FontWeight="SemiBold"/>
+                                                <TextBlock Style="{StaticResource TinyText}" Margin="0,1,0,0">
+                                                    <Run Text="v"/><Run Text="{Binding Version, Mode=OneWay}"/>
+                                                    <Run Text=" · 支持 "/><Run Text="{Binding SupportedVersionShort, Mode=OneWay}"/>
+                                                </TextBlock>
+                                            </StackPanel>
+                                            <Border Grid.Column="1" Style="{StaticResource TagBorder}" Margin="8,0,0,0"
+                                                    Background="#E8F5EC" VerticalAlignment="Center"
+                                                    Visibility="{Binding UpdateStatus, Converter={StaticResource BoolToVis}}">
+                                                <TextBlock Text="已更新" FontSize="10" Foreground="#1F8A4C"/>
+                                            </Border>
+                                            <Border Grid.Column="2" Style="{StaticResource TagBorder}" Margin="6,0,0,0"
+                                                    Background="#FFF4E5" VerticalAlignment="Center"
+                                                    Visibility="{Binding Free, Converter={StaticResource BoolToVis}}">
+                                                <TextBlock Text="免费" FontSize="10" Foreground="#A86500"/>
+                                            </Border>
+                                        </Grid>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+            </ScrollViewer>
+        </Grid>
+    </Grid>
+</UserControl>

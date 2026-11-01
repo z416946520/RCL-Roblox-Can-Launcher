@@ -1,0 +1,233 @@
+<UserControl x:Class="RCL.Pages.QuickLaunchPage"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             FontFamily="{DynamicResource AppFont}" UseLayoutRounding="True" SnapsToDevicePixels="True"
+             AllowDrop="True" Drop="Root_Drop" DragOver="Root_DragOver">
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="292"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+
+        <Border Grid.Column="0" Background="{DynamicResource BrushSidebar}" BorderBrush="{DynamicResource BrushBorder}"
+                BorderThickness="0,0,1,0">
+            <Grid Margin="14,18,12,12">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <Grid Grid.Row="0" Margin="2,0,0,12">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="快捷启动" Style="{StaticResource PageTitle}" FontSize="18"/>
+                        <Border Style="{StaticResource TagBorder}" Margin="8,2,0,0">
+                            <TextBlock x:Name="EntryCountText" Text="0" Style="{StaticResource TagText}"/>
+                        </Border>
+                    </StackPanel>
+                    <Button HorizontalAlignment="Right" Style="{StaticResource IconButton}" Width="26" Height="26"
+                            Click="AddApplication_Click" ToolTip="添加应用">
+                        <TextBlock Text="&#xE710;" FontFamily="Segoe MDL2 Assets" FontSize="12"
+                                   Foreground="{DynamicResource BrushTextSecondary}"/>
+                    </Button>
+                </Grid>
+
+                <Grid Grid.Row="1" Margin="0,0,0,8">
+                    <TextBox x:Name="SearchBox" Style="{StaticResource PclTextBox}" Height="32"
+                             TextChanged="SearchBox_TextChanged" Padding="9,4"/>
+                    <TextBlock x:Name="SearchHint" Text="搜索快捷启动…" Margin="11,0,0,0" VerticalAlignment="Center"
+                               FontSize="12.5" Foreground="{DynamicResource BrushTextMuted}" IsHitTestVisible="False"/>
+                </Grid>
+
+                <ListBox x:Name="EntriesList" Grid.Row="2" Style="{StaticResource PclListBox}"
+                         ItemContainerStyle="{StaticResource PclListItem}"
+                         SelectionChanged="EntriesList_SelectionChanged" Margin="0,0,-4,0" Padding="0,0,4,0">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="34"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <Border Width="28" Height="28" CornerRadius="6" VerticalAlignment="Center"
+                                        Background="{DynamicResource BrushAccentSoft}">
+                                    <Grid>
+                                        <TextBlock Text="{Binding IconGlyph}" FontFamily="Segoe MDL2 Assets" FontSize="13"
+                                                   Foreground="{DynamicResource BrushAccentDark}"
+                                                   HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        <Image Source="{Binding TargetPath, Converter={StaticResource AppIcon}}"
+                                               Stretch="Uniform" Margin="2"/>
+                                    </Grid>
+                                </Border>
+                                <StackPanel Grid.Column="1" Margin="7,0,0,0" VerticalAlignment="Center">
+                                    <TextBlock Text="{Binding Name}" FontSize="13" TextTrimming="CharacterEllipsis"/>
+                                    <TextBlock Text="{Binding TypeLabel}" FontSize="11"
+                                               Foreground="{DynamicResource BrushTextMuted}" Margin="0,1,0,0"/>
+                                </StackPanel>
+                                <Border Grid.Column="2" Style="{StaticResource TagBorder}" Background="#E8F5EC" Margin="4,0,0,0"
+                                        Visibility="{Binding IsRunning, Converter={StaticResource BoolToVis}}">
+                                    <TextBlock Text="运行中" FontSize="10" Foreground="#1F8A4C"/>
+                                </Border>
+                            </Grid>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+
+                <Grid Grid.Row="3" Margin="0,10,0,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <Button Content="添加应用" Style="{StaticResource PrimaryButton}" Height="32" Click="AddApplication_Click"/>
+                    <Button Grid.Column="1" Content="Potassium" Style="{StaticResource SmallButton}" Height="32"
+                            Margin="6,0,0,0" Click="AddPotassium_Click" ToolTip="添加 Potassium 启动项"/>
+                </Grid>
+            </Grid>
+        </Border>
+
+        <Grid Grid.Column="1">
+            <ScrollViewer x:Name="DetailScroll" Style="{StaticResource PageScroll}">
+                <StackPanel Margin="24,20,24,24">
+                    <Grid Margin="0,0,0,16">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <Border x:Name="HeaderIcon" Width="46" Height="46" CornerRadius="9"
+                                Background="{DynamicResource BrushAccentSoft}" VerticalAlignment="Center">
+                            <Grid>
+                                <TextBlock x:Name="HeaderGlyph" Text="&#xE7C3;" FontFamily="Segoe MDL2 Assets" FontSize="20"
+                                           Foreground="{DynamicResource BrushAccentDark}"
+                                           HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                <Image x:Name="HeaderIconImage" Stretch="Uniform" Margin="4"/>
+                            </Grid>
+                        </Border>
+                        <StackPanel Grid.Column="1" Margin="12,0,0,0" VerticalAlignment="Center">
+                            <TextBlock x:Name="HeaderName" Text="快捷启动" FontSize="20" FontWeight="SemiBold"
+                                       TextTrimming="CharacterEllipsis"/>
+                            <TextBlock x:Name="HeaderMeta" Style="{StaticResource MutedText}" FontSize="12" Margin="0,2,0,0"/>
+                        </StackPanel>
+                        <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                            <Button x:Name="LaunchButton" Style="{StaticResource PrimaryButton}" Height="30" MinWidth="86"
+                                    Click="Launch_Click">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="&#xE768;" FontFamily="Segoe MDL2 Assets" FontSize="11"
+                                               Foreground="White" VerticalAlignment="Center" Margin="0,1,6,0"/>
+                                    <TextBlock Text="启动" Foreground="White"/>
+                                </StackPanel>
+                            </Button>
+                            <Button x:Name="StopButton" Content="结束" Style="{StaticResource DangerButton}" Height="30"
+                                    Margin="6,0,0,0" Click="Stop_Click"/>
+                            <Button Content="删除" Style="{StaticResource GhostButton}" Height="30" Margin="4,0,0,0"
+                                    Click="Delete_Click"/>
+                        </StackPanel>
+                    </Grid>
+
+                    <Border Style="{StaticResource Card}" Padding="20,17,20,18" Margin="0,0,0,14">
+                        <StackPanel>
+                            <TextBlock Text="启动配置" Style="{StaticResource CardTitle}" Margin="0,0,0,12"/>
+                            <Grid Margin="0,0,0,10">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="92"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Text="名称" Style="{StaticResource MutedText}" VerticalAlignment="Center"/>
+                                <TextBox Grid.Column="1" x:Name="NameBox" Style="{StaticResource PclTextBox}"
+                                         TextChanged="NameBox_TextChanged"/>
+                            </Grid>
+                            <Grid Margin="0,0,0,10">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="92"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Text="目标路径" Style="{StaticResource MutedText}" VerticalAlignment="Center"/>
+                                <TextBox Grid.Column="1" x:Name="PathBox" Style="{StaticResource PclTextBox}"
+                                         TextChanged="PathBox_TextChanged" LostKeyboardFocus="PathBox_LostFocus"/>
+                                <Button Grid.Column="2" Content="浏览…" Style="{StaticResource SmallButton}"
+                                        Height="32" Margin="6,0,0,0" Click="BrowseTarget_Click"/>
+                            </Grid>
+                            <Grid Margin="0,0,0,10">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="92"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Text="启动参数" Style="{StaticResource MutedText}" VerticalAlignment="Center"/>
+                                <TextBox Grid.Column="1" x:Name="ArgsBox" Style="{StaticResource PclTextBox}"
+                                         FontFamily="Consolas" FontSize="12" TextChanged="ArgsBox_TextChanged"/>
+                            </Grid>
+                            <Grid Margin="0,0,0,10">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="92"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Text="工作目录" Style="{StaticResource MutedText}" VerticalAlignment="Center"/>
+                                <TextBox Grid.Column="1" x:Name="WorkDirBox" Style="{StaticResource PclTextBox}"
+                                         TextChanged="WorkDirBox_TextChanged"/>
+                                <Button Grid.Column="2" Content="浏览…" Style="{StaticResource SmallButton}"
+                                        Height="32" Margin="6,0,0,0" Click="BrowseWorkDir_Click"/>
+                            </Grid>
+                            <Grid Margin="0,0,0,4">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="92"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Text="进程名" Style="{StaticResource MutedText}" VerticalAlignment="Center"/>
+                                <TextBox Grid.Column="1" x:Name="ProcessBox" Style="{StaticResource PclTextBox}"
+                                         FontFamily="Consolas" FontSize="12" TextChanged="ProcessBox_TextChanged"/>
+                            </Grid>
+                            <TextBlock Text="用于判断程序是否已运行；.exe 会自动填入，脚本或 .lnk 可手动填写进程名。"
+                                       Style="{StaticResource TinyText}" Margin="93,0,0,0"/>
+                            <CheckBox x:Name="AdminCheck" Content="以管理员身份运行" Style="{StaticResource PclCheckBox}"
+                                      Margin="0,12,0,0" Click="AdminCheck_Click"/>
+                        </StackPanel>
+                    </Border>
+
+                    <Border Style="{StaticResource Card}" Padding="18,15,18,16" Margin="0,0,0,14">
+                        <StackPanel>
+                            <Grid>
+                                <TextBlock Text="运行状态" Style="{StaticResource CardTitle}"/>
+                                <TextBlock x:Name="SaveStatus" Style="{StaticResource TinyText}"
+                                           HorizontalAlignment="Right" VerticalAlignment="Center" Text="自动保存"/>
+                            </Grid>
+                            <TextBlock x:Name="RunningInfoText" Style="{StaticResource MutedText}" Margin="0,6,0,0"/>
+                            <TextBlock x:Name="PathStatusText" Style="{StaticResource TinyText}" Margin="0,3,0,0"/>
+                            <TextBlock x:Name="LastUsedText" Style="{StaticResource TinyText}" Margin="0,3,0,0"/>
+                        </StackPanel>
+                    </Border>
+
+                    <Border Style="{StaticResource Card}" Background="{DynamicResource BrushAccentSoft}"
+                            BorderBrush="{DynamicResource BrushAccentBorder}" Padding="16,13">
+                        <StackPanel>
+                            <TextBlock Text="快捷启动说明" FontSize="12.5" FontWeight="SemiBold"
+                                       Foreground="{DynamicResource BrushAccentDark}"/>
+                            <TextBlock FontSize="12" Foreground="#2E5F9E" Margin="0,4,0,0" TextWrapping="Wrap" LineHeight="19"
+                                       Text="支持 .exe / .lnk / .cmd / .bat / .ps1。目标已在运行时再次点击「启动」，RCL 会询问是否结束旧进程并重新启动。受保护的程序（如 Potassium）可能无法强制结束，需要手动关闭或管理员权限。也可以把文件直接拖进这个页面。"/>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+            </ScrollViewer>
+
+            <Border x:Name="EmptyPanel" Background="{DynamicResource BrushBackground}" Visibility="Collapsed">
+                <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Width="380">
+                    <TextBlock Text="&#xE71B;" FontFamily="Segoe MDL2 Assets" FontSize="38"
+                               Foreground="{DynamicResource BrushAccentBorder}" HorizontalAlignment="Center"/>
+                    <TextBlock Text="添加快捷启动" Style="{StaticResource PageTitle}" HorizontalAlignment="Center"
+                               Margin="0,14,0,6"/>
+                    <TextBlock Text="把常用的 exe、脚本或 Potassium 放在这里，一次点击即可启动。"
+                               Style="{StaticResource MutedText}" HorizontalAlignment="Center" TextAlignment="Center"/>
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,18,0,0">
+                        <Button Content="添加应用" Style="{StaticResource PrimaryButton}" Height="34" MinWidth="120"
+                                Click="AddApplication_Click"/>
+                        <Button Content="添加 Potassium" Style="{StaticResource PclButton}" Height="34" MinWidth="140"
+                                Margin="8,0,0,0" Click="AddPotassium_Click"/>
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+        </Grid>
+    </Grid>
+</UserControl>

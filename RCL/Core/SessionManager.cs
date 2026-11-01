@@ -1,0 +1,347 @@
+using System.Collections.ObjectModel;
+using System.Diagnostics;
+using System.IO;
+using System.Windows.Threading;
+using RCL.Models;
+
+namespace RCL.Core;
+
+public static class SessionManager
+{
+    public static ObservableCollection<RunningSession> Sessions { get; } = new();
+
+    public static event Action? Changed;
+    public static event Action<RunningSession>? SessionEnded;
+
+    private static DispatcherTimer? _timer;
+    private static bool _running;
+
+    public static void Start()
+    {
+        if (_running)
+            return;
+        _running = true;
+        _timer = new DispatcherTimer(DispatcherPriority.Background)
+        {
+            Interval = TimeSpan.FromSeconds(1)
+        };
+        _timer.Tick += (_, _) => Tick();
+        _timer.Start();
+        Log.Info("进程监视器已启动");
+    }
+
+    public static RunningSession Track(RclInstance instance, Process process, string placeName, string launchDirectory, long? placeId = null)
+    {
+        var session = new RunningSession
+        {
+            InstanceId = instance.Id,
+            InstanceName = instance.Name,
+            Pid = process.Id,
+            StartedAt = DateTime.Now,
+            PlaceName = placeName,
+            PlaceId = placeId,
+            Process = process
+        };
+        Sessions.Add(session);
+        Changed?.Invoke();
+        Log.Info($"跟踪进程 PID {session.Pid}（{instance.Name}），启动目录 {launchDirectory}");
+        return session;
+    }
+
+    public static void Kill(RunningSession session)
+    {
+        try
+        {
+            if (session.Process is { HasExited: false })
+            {
+                session.Process.Kill(true);
+                Log.Info("已结束进程 PID " + session.Pid);
+            }
+        }
+        catch (Exception ex)
+        {
+            Log.Warn($"结束 PID {session.Pid} 失败：{ex.Message}");
+        }
+    }
+
+    public static void KillAll()
+    {
+        foreach (var session in Sessions.ToList())
+            Kill(session);
+    }
+
+    /// <summary>
+    /// Records elapsed time for sessions still running when the launcher closes. The Roblox
+    /// clients keep running, but RCL cannot keep counting once its process exits.
+    /// </summary>
+    public static void Shutdown()
+    {
+        foreach (var session in Sessions.ToList())
+        {
+            try
+            {
+                if (session.IsExternal)
+                    continue;
+                var inst = InstanceStore.Find(session.InstanceId);
+                if (inst is null)
+                    continue;
+                var elapsed = DateTime.Now - session.StartedAt;
+                if (AppSettings.Current.TrackPlaytime && elapsed.TotalSeconds > 1)
+                {
+                    inst.PlaytimeSeconds += (long)elapsed.TotalSeconds;
+                    inst.LastPlayed = DateTime.Now;
+                    Log.Info($"退出时结算会话 PID {session.Pid}，时长 {elapsed:hh\\:mm\\:ss}");
+                }
+            }
+            catch (Exception ex)
+            {
+                Log.Warn("退出时结算会话失败：" + ex.Message);
+            }
+        }
+        Sessions.Clear();
+        _timer?.Stop();
+        _running = false;
+    }
+
+    private static void Tick()
+    {
+        foreach (var session in Sessions.ToList())
+        {
+            var elapsed = DateTime.Now - session.StartedAt;
+            session.Elapsed = elapsed.TotalHours >= 1
+                ? $"{(int)elapsed.TotalHours}:{elapsed.Minutes:00}:{elapsed.Seconds:00}"
+                : $"{elapsed.Minutes:00}:{elapsed.Seconds:00}";
+
+            bool exited;
+            try
+            {
+                exited = session.Process is null || session.Process.HasExited;
+            }
+            catch
+            {
+                exited = true;
+            }
+
+            if (!exited)
+                continue;
+
+            Sessions.Remove(session);
+            Finalize(session);
+            Changed?.Invoke();
+            SessionEnded?.Invoke(session);
+        }
+    }
+
+    private static void Finalize(RunningSession session)
+    {
+        try
+        {
+            if (session.IsExternal)
+                return;
+            var inst = InstanceStore.Find(session.InstanceId);
+            if (inst is null)
+                return;
+
+            var elapsed = DateTime.Now - session.StartedAt;
+            if (AppSettings.Current.TrackPlaytime && elapsed.TotalSeconds > 1)
+            {
+                inst.PlaytimeSeconds += (long)elapsed.TotalSeconds;
+                inst.LastPlayed = DateTime.Now;
+                InstanceStore.Save(inst);
+            }
+            Log.Info($"进程 PID {session.Pid} 已退出，会话时长 {elapsed:hh\\:mm\\:ss}");
+        }
+        catch (Exception ex)
+        {
+            Log.Warn("结算会话失败：" + ex.Message);
+        }
+    }
+}
+
+public sealed class LaunchException : Exception
+{
+    public LaunchException(string message) : base(message)
+    {
+    }
+}
+
+public sealed class LaunchResult
+{
+    public RunningSession Session { get; init; } = null!;
+    public string VersionDirectory { get; init; } = "";
+    public string LaunchDirectory { get; init; } = "";
+    public string Executable { get; init; } = "";
+    public bool MultiInstance { get; init; }
+    public bool UsedSlot { get; init; }
+    public int ModsApplied { get; init; }
+    public int FlagsApplied { get; init; }
+    public string Arguments { get; init; } = "";
+}
+
+public static class LaunchService
+{
+    private static readonly SemaphoreSlim Gate = new(1, 1);
+
+    public static async Task<LaunchResult> LaunchAsync(
+        RclInstance instance,
+        long? placeId,
+        string? jobId,
+        string? placeName,
+        bool multiInstance,
+        Action<string>? status = null,
+        CancellationToken cancellationToken = default)
+    {
+        await Gate.WaitAsync(cancellationToken);
+        try
+        {
+            status?.Invoke("检查 Roblox 版本…");
+            var version = RobloxInstall.Resolve(instance.VersionPath);
+            if (version is null)
+            {
+                if (!string.IsNullOrWhiteSpace(instance.VersionPath))
+                    throw new LaunchException("实例绑定的 Roblox 版本目录不存在：\n" + instance.VersionPath);
+                throw new LaunchException("没有检测到 Roblox 客户端。请先在「下载」页安装，或在实例里绑定一个已有版本。");
+            }
+
+            Log.Info($"启动 {instance.Name}，版本 {version.FolderName}，多开={multiInstance}");
+
+            status?.Invoke("应用 FastFlags…");
+            var flagsPath = FastFlags.DeployToVersion(instance, version.Directory);
+            var flagsApplied = instance.FastFlags.Count(f => f.Enabled && !string.IsNullOrWhiteSpace(f.Name));
+
+            int modsApplied = 0;
+            if (instance.ApplyMods)
+            {
+                status?.Invoke("应用模组…");
+                modsApplied = ModsService.Apply(instance, version.Directory);
+            }
+
+            string exe = version.ExePath;
+            string launchDir = version.Directory;
+            bool usedSlot = false;
+
+            if (multiInstance)
+            {
+                status?.Invoke("准备多开槽位…");
+                MultiInstanceLock.Acquire();
+                var busy = MachineBusyPaths.Scan();
+                var slot = MultiInstanceLock.PrepareSlot(version.Directory, busy, AppSettings.Current.MaxSlots);
+                if (slot is not null)
+                {
+                    exe = Path.Combine(slot, "RobloxPlayerBeta.exe");
+                    launchDir = slot;
+                    usedSlot = true;
+                }
+            }
+
+            var argumentList = BuildArguments(placeId, jobId, instance.LaunchArgs);
+            try
+            {
+                AccountService.PrepareLaunch();
+            }
+            catch (Exception ex)
+            {
+                throw new LaunchException(ex.Message);
+            }
+
+            var psi = new ProcessStartInfo
+            {
+                FileName = exe,
+                WorkingDirectory = launchDir,
+                UseShellExecute = false
+            };
+            foreach (var arg in argumentList)
+                psi.ArgumentList.Add(arg);
+
+            status?.Invoke("启动 Roblox…");
+            Process? process;
+            try
+            {
+                process = Process.Start(psi);
+            }
+            catch (Exception ex)
+            {
+                throw new LaunchException("Roblox 启动失败：\n" + ex.Message);
+            }
+
+            if (process is null)
+                throw new LaunchException("Roblox 没有返回进程句柄，启动失败。");
+
+            var displayName = string.IsNullOrWhiteSpace(placeName) ? "" : placeName!;
+            var session = SessionManager.Track(instance, process, displayName, launchDir, placeId);
+
+            instance.LastPlayed = DateTime.Now;
+            if (placeId is > 0)
+            {
+                instance.LastGame = new GameRef
+                {
+                    PlaceId = placeId.Value,
+                    JobId = jobId,
+                    Title = placeName
+                };
+            }
+            InstanceStore.Save(instance);
+            instance.NotifyAll();
+
+            Log.Info($"Roblox 已启动，PID {process.Id}，参数：{(argumentList.Count == 0 ? "（无）" : string.Join(' ', argumentList))}");
+            return new LaunchResult
+            {
+                Session = session,
+                VersionDirectory = version.Directory,
+                LaunchDirectory = launchDir,
+                Executable = exe,
+                MultiInstance = multiInstance,
+                UsedSlot = usedSlot,
+                ModsApplied = modsApplied,
+                FlagsApplied = flagsApplied,
+                Arguments = string.Join(' ', argumentList)
+            };
+        }
+        finally
+        {
+            Gate.Release();
+        }
+    }
+
+    public static List<string> BuildArguments(long? placeId, string? jobId, string? extra)
+    {
+        var args = new List<string>();
+        if (placeId is > 0)
+        {
+            var uri = $"roblox://placeId={placeId.Value}";
+            if (!string.IsNullOrWhiteSpace(jobId))
+                uri += "&gameInstanceId=" + Uri.EscapeDataString(jobId.Trim());
+            args.Add(uri);
+        }
+
+        if (!string.IsNullOrWhiteSpace(extra))
+            args.AddRange(SplitArguments(extra));
+        return args;
+    }
+
+    public static IEnumerable<string> SplitArguments(string commandLine)
+    {
+        var current = new System.Text.StringBuilder();
+        bool inQuotes = false;
+        foreach (var ch in commandLine)
+        {
+            if (ch == '"')
+            {
+                inQuotes = !inQuotes;
+                continue;
+            }
+            if (char.IsWhiteSpace(ch) && !inQuotes)
+            {
+                if (current.Length > 0)
+                {
+                    yield return current.ToString();
+                    current.Clear();
+                }
+                continue;
+            }
+            current.Append(ch);
+        }
+        if (current.Length > 0)
+            yield return current.ToString();
+    }
+}
