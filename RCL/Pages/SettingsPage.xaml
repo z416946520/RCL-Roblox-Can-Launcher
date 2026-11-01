@@ -79,6 +79,15 @@
                                       Style="{StaticResource PclCheckBox}" Margin="0,5" Click="Setting_Changed"/>
                             <CheckBox x:Name="DefaultMultiCheck" Content="新建实例默认开启多开"
                                       Style="{StaticResource PclCheckBox}" Margin="0,5" Click="Setting_Changed"/>
+                            <TextBlock Text="Roblox 客户端更新" Style="{StaticResource MutedText}" Margin="0,14,0,6"/>
+                            <ComboBox x:Name="RobloxUpdateCombo" Style="{StaticResource PclComboBox}" Width="260"
+                                      HorizontalAlignment="Left" SelectionChanged="RobloxUpdateMode_Changed">
+                                <ComboBoxItem Content="启动前自动更新（立即）"/>
+                                <ComboBoxItem Content="发现新版本后等一天再更新"/>
+                                <ComboBoxItem Content="只手动更新"/>
+                            </ComboBox>
+                            <TextBlock Style="{StaticResource TinyText}" Margin="0,6,0,0" TextWrapping="Wrap"
+                                       Text="只在实例未绑定固定版本时生效；Roblox 正在运行时会跳过本次检查。"/> 
                         </StackPanel>
                     </Border>
 

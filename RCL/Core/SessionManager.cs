@@ -197,6 +197,9 @@ public static class LaunchService
         try
         {
             status?.Invoke("检查 Roblox 版本…");
+            if (string.IsNullOrWhiteSpace(instance.VersionPath) && RobloxUpdateService.ShouldCheck())
+                await RobloxUpdateService.EnsureLatestAsync(status, cancellationToken);
+
             var version = RobloxInstall.Resolve(instance.VersionPath);
             if (version is null)
             {

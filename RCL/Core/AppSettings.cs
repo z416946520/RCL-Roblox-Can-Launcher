@@ -21,6 +21,8 @@ public sealed class AppSettings
     public bool FirstRun { get; set; } = true;
     public bool CheckUpdatesOnStartup { get; set; } = true;
     public string UpdateManifestUrl { get; set; } = "";
+    /// <summary>Auto (立即更新) | Delay (一天后更新) | Manual (手动)。</summary>
+    public string RobloxUpdateMode { get; set; } = "Auto";
     public bool DiscordRpcEnabled { get; set; }
     public string DiscordClientId { get; set; } = "";
     public bool DiscordShowButtons { get; set; } = true;

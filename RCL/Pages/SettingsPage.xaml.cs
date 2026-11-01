@@ -61,6 +61,12 @@ public partial class SettingsPage : UserControl
         CloseAfterCheck.IsChecked = s.CloseAfterLaunch;
         PlaytimeCheck.IsChecked = s.TrackPlaytime;
         DefaultMultiCheck.IsChecked = s.DefaultMultiInstance;
+        RobloxUpdateCombo.SelectedIndex = s.RobloxUpdateMode switch
+        {
+            "Delay" => 1,
+            "Manual" => 2,
+            _ => 0
+        };
 
         DefaultInstanceCombo.ItemsSource = null;
         DefaultInstanceCombo.ItemsSource = InstanceStore.All;
@@ -162,6 +168,19 @@ public partial class SettingsPage : UserControl
         s.CloseAfterLaunch = CloseAfterCheck.IsChecked == true;
         s.TrackPlaytime = PlaytimeCheck.IsChecked == true;
         s.DefaultMultiInstance = DefaultMultiCheck.IsChecked == true;
+        AppSettings.Save();
+    }
+
+    private void RobloxUpdateMode_Changed(object sender, SelectionChangedEventArgs e)
+    {
+        if (_loading)
+            return;
+        AppSettings.Current.RobloxUpdateMode = RobloxUpdateCombo.SelectedIndex switch
+        {
+            1 => "Delay",
+            2 => "Manual",
+            _ => "Auto"
+        };
         AppSettings.Save();
     }
 

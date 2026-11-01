@@ -77,7 +77,50 @@ public static class RobloxApi
     public static async Task<RobloxDeploymentInfo> GetDeploymentAsync(string channel,
         CancellationToken cancellationToken = default)
     {
-        var url = string.IsNullOrWhiteSpace(channel) || channel.Equals("default", StringComparison.OrdinalIgnoreCase)
+        Exception? last = null;
+        foreach (var candidate in ChannelCandidates(channel))
+        {
+            try
+            {
+                var info = await FetchDeploymentAsync(candidate, cancellationToken).ConfigureAwait(false);
+                SaveDeploymentCache(candidate, info);
+                if (!string.Equals(candidate, channel, StringComparison.OrdinalIgnoreCase))
+                    Log.Warn($"渠道「{channel}」不可用，已回退到「{candidate}」");
+                return info;
+            }
+            catch (OperationCanceledException)
+            {
+                throw;
+            }
+            catch (Exception ex)
+            {
+                last = ex;
+                Log.Warn($"获取渠道「{candidate}」的版本信息失败：{ex.Message}");
+            }
+        }
+
+        var cached = LoadDeploymentCache(channel);
+        if (cached is not null)
+        {
+            Log.Warn($"版本接口不可用，使用本地缓存的版本：{cached.ClientVersionUpload}");
+            return cached;
+        }
+        throw new InvalidOperationException("无法获取 Roblox 版本信息，请检查网络后重试。", last);
+    }
+
+    /// <summary>Requested channel first, then production, so a dead channel never blocks launch.</summary>
+    private static IEnumerable<string> ChannelCandidates(string channel)
+    {
+        if (!string.IsNullOrWhiteSpace(channel) &&
+            !channel.Equals("default", StringComparison.OrdinalIgnoreCase))
+            yield return channel;
+        yield return "default";
+    }
+
+    private static async Task<RobloxDeploymentInfo> FetchDeploymentAsync(string channel,
+        CancellationToken cancellationToken)
+    {
+        var url = channel.Equals("default", StringComparison.OrdinalIgnoreCase)
             ? "https://clientsettingscdn.roblox.com/v2/client-version/WindowsPlayer"
             : $"https://clientsettingscdn.roblox.com/v2/client-version/WindowsPlayer/channel/{Uri.EscapeDataString(channel)}";
 
@@ -90,6 +133,74 @@ public static class RobloxApi
         if (info is null || string.IsNullOrWhiteSpace(info.ClientVersionUpload))
             throw new InvalidOperationException("部署接口返回了空版本信息。");
         return info;
+    }
+
+    // ---------- offline cache ----------
+
+    private sealed class CachedDeployment
+    {
+        public RobloxDeploymentInfo Info { get; set; } = new();
+        public DateTime FetchedUtc { get; set; }
+    }
+
+    private static readonly TimeSpan CacheMaxAge = TimeSpan.FromDays(7);
+
+    private static string DeploymentCacheFile =>
+        Path.Combine(AppPaths.Base, "cache", "roblox-deploy.json");
+
+    private static Dictionary<string, CachedDeployment> LoadCacheMap()
+    {
+        try
+        {
+            if (!File.Exists(DeploymentCacheFile))
+                return new Dictionary<string, CachedDeployment>(StringComparer.OrdinalIgnoreCase);
+            return JsonSerializer.Deserialize<Dictionary<string, CachedDeployment>>(
+                       File.ReadAllText(DeploymentCacheFile), JsonOpts.Read)
+                   ?? new Dictionary<string, CachedDeployment>(StringComparer.OrdinalIgnoreCase);
+        }
+        catch
+        {
+            return new Dictionary<string, CachedDeployment>(StringComparer.OrdinalIgnoreCase);
+        }
+    }
+
+    private static void SaveDeploymentCache(string channel, RobloxDeploymentInfo info)
+    {
+        try
+        {
+            var map = LoadCacheMap();
+            map[channel] = new CachedDeployment { Info = info, FetchedUtc = DateTime.UtcNow };
+            Directory.CreateDirectory(Path.GetDirectoryName(DeploymentCacheFile)!);
+            File.WriteAllText(DeploymentCacheFile,
+                JsonSerializer.Serialize(map, JsonOpts.Write), new UTF8Encoding(false));
+        }
+        catch (Exception ex)
+        {
+            Log.Warn("写入版本缓存失败：" + ex.Message);
+        }
+    }
+
+    private static RobloxDeploymentInfo? LoadDeploymentCache(string channel)
+    {
+        try
+        {
+            var map = LoadCacheMap();
+            foreach (var candidate in ChannelCandidates(channel))
+            {
+                if (!map.TryGetValue(candidate, out var cached))
+                    continue;
+                if (DateTime.UtcNow - cached.FetchedUtc > CacheMaxAge)
+                    continue;
+                if (string.IsNullOrWhiteSpace(cached.Info.ClientVersionUpload))
+                    continue;
+                return cached.Info;
+            }
+            return null;
+        }
+        catch
+        {
+            return null;
+        }
     }
 
     public static async Task<long> ResolveUniverseIdAsync(long placeId, CancellationToken cancellationToken = default)
