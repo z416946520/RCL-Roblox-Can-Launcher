@@ -1,5 +1,6 @@
 using System.Text.RegularExpressions;
 using System.Windows;
+using System.Windows.Media.Imaging;
 using System.Windows.Input;
 using RCL.Core;
 
@@ -25,8 +26,34 @@ public partial class LaunchProgressWindow : Window
         InitializeComponent();
         ChannelText.Text = "Channel: production";
         VersionText.Text = "Version: " + (version?.DisplayName ?? "\u2014");
+        LogoImage.Source = LoadLogo();
         Report(Loc.T("正在与 Roblox 建立连接…"));
-        Loaded += (_, _) => CenterOnOwner();
+    }
+
+    /// <summary>
+    /// WPF picks the first (16x16) frame when an .ico is used as an ImageSource, which looks
+    /// blurry scaled up. Decode the icon and take the largest frame instead.
+    /// </summary>
+    private static System.Windows.Media.ImageSource? LoadLogo()
+    {
+        try
+        {
+            var uri = new Uri("pack://application:,,,/RCL;component/Assets/RCL.ico");
+            var resource = Application.GetResourceStream(uri);
+            if (resource?.Stream is null)
+                return null;
+            using var stream = resource.Stream;
+            var decoder = new IconBitmapDecoder(stream,
+                BitmapCreateOptions.PreservePixelFormat, BitmapCacheOption.OnLoad);
+            var frame = decoder.Frames.OrderByDescending(f => f.PixelWidth).FirstOrDefault();
+            frame?.Freeze();
+            return frame;
+        }
+        catch (Exception ex)
+        {
+            Log.Warn("加载启动窗图标失败：" + ex.Message);
+            return null;
+        }
     }
 
     public void Report(string message)
@@ -58,21 +85,6 @@ public partial class LaunchProgressWindow : Window
     {
         _closed = true;
         try { Close(); } catch { }
-    }
-
-    private void CenterOnOwner()
-    {
-        try
-        {
-            if (Owner is null)
-                return;
-            Left = Owner.Left + (Owner.ActualWidth - ActualWidth) / 2;
-            Top = Owner.Top + (Owner.ActualHeight - ActualHeight) / 2;
-        }
-        catch
-        {
-            // Centering is cosmetic.
-        }
     }
 
     private void Cancel_Click(object sender, RoutedEventArgs e)
