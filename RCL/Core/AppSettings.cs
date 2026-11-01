@@ -23,6 +23,9 @@ public sealed class AppSettings
     public string UpdateManifestUrl { get; set; } = "";
     /// <summary>Auto (立即更新) | Delay (一天后更新) | Manual (手动)。</summary>
     public string RobloxUpdateMode { get; set; } = "Auto";
+    public bool OptimizeRoblox { get; set; }
+    public int RobloxMemoryLimitMb { get; set; }
+    public int RobloxMaxCores { get; set; }
     public bool DiscordRpcEnabled { get; set; }
     public string DiscordClientId { get; set; } = "";
     public bool DiscordShowButtons { get; set; } = true;

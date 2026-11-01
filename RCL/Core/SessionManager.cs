@@ -301,9 +301,35 @@ public static class LaunchService
             }
 
             if (attempt.Watch.Health == LaunchHealth.Crashed)
-                throw new LaunchException(BuildCrashMessage(attempt.Watch));
+            {
+                var disabledMods = instance.ApplyMods
+                    ? ModCrashGuard.Quarantine(instance)
+                    : (IReadOnlyList<string>)Array.Empty<string>();
+                throw new LaunchException(BuildCrashMessage(attempt.Watch, disabledMods));
+            }
 
             var process = attempt.Process;
+
+            // Process tuning is exactly what a safe launch exists to rule out, so skip it there.
+            if (!safeFallback)
+                RobloxProcessOptimizer.Apply(process);
+
+            if (instance.ApplyMods)
+            {
+                if (safeFallback)
+                {
+                    var disabled = ModCrashGuard.Quarantine(instance);
+                    if (disabled.Count > 0)
+                    {
+                        Log.Warn("安全启动成功后已停用疑似模组：" + string.Join("、", disabled));
+                        status?.Invoke("已停用疑似崩溃的模组：" + string.Join("、", disabled));
+                    }
+                }
+                else
+                {
+                    ModCrashGuard.MarkHealthy(instance);
+                }
+            }
 
             var displayName = string.IsNullOrWhiteSpace(placeName) ? "" : placeName!;
             var session = SessionManager.Track(instance, process, displayName, launchDir, placeId);
@@ -379,13 +405,16 @@ public static class LaunchService
         return new LaunchAttempt(process, watch);
     }
 
-    private static string BuildCrashMessage(StartupWatchResult watch)
+    private static string BuildCrashMessage(StartupWatchResult watch, IReadOnlyList<string>? disabledMods = null)
     {
         var log = string.IsNullOrEmpty(watch.LogFile) ? "" : "\n日志：" + watch.LogFile;
+        var mods = disabledMods is { Count: > 0 }
+            ? "\n已停用疑似导致崩溃的模组：" + string.Join("、", disabledMods) + "（可在「模组」页重新启用）。"
+            : "";
         return "Roblox 在启动阶段连续崩溃（退出码 " + FormatExitCode(watch.ExitCode) +
-               "），还原修改、重置本地缓存都没能拉起。\n" +
+               "），还原修改、停用可疑模组、重置本地缓存都没能拉起。\n" +
                "这通常来自客户端本体、显卡驱动或注入游戏的其他程序，而不是 RCL 写入的设置。" +
-               "可以试试：更新显卡驱动、关闭覆盖层与杀毒注入，或重装一次客户端。" + log;
+               "可以试试：更新显卡驱动、关闭覆盖层与杀毒注入，或重装一次客户端。" + mods + log;
     }
 
     private static string FormatExitCode(int? code) =>

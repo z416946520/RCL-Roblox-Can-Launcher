@@ -61,6 +61,9 @@ public partial class SettingsPage : UserControl
         CloseAfterCheck.IsChecked = s.CloseAfterLaunch;
         PlaytimeCheck.IsChecked = s.TrackPlaytime;
         DefaultMultiCheck.IsChecked = s.DefaultMultiInstance;
+        OptimizeCheck.IsChecked = s.OptimizeRoblox;
+        MemoryLimitBox.Text = s.RobloxMemoryLimitMb.ToString();
+        CoresBox.Text = s.RobloxMaxCores.ToString();
         RobloxUpdateCombo.SelectedIndex = s.RobloxUpdateMode switch
         {
             "Delay" => 1,
@@ -168,6 +171,23 @@ public partial class SettingsPage : UserControl
         s.CloseAfterLaunch = CloseAfterCheck.IsChecked == true;
         s.TrackPlaytime = PlaytimeCheck.IsChecked == true;
         s.DefaultMultiInstance = DefaultMultiCheck.IsChecked == true;
+        s.OptimizeRoblox = OptimizeCheck.IsChecked == true;
+        AppSettings.Save();
+    }
+
+    private void OptimizeValues_Changed(object sender, RoutedEventArgs e)
+    {
+        if (_loading)
+            return;
+        var s = AppSettings.Current;
+        s.RobloxMemoryLimitMb = int.TryParse(MemoryLimitBox.Text.Trim(), out var mb)
+            ? Math.Clamp(mb, 0, 65536)
+            : 0;
+        s.RobloxMaxCores = int.TryParse(CoresBox.Text.Trim(), out var cores)
+            ? Math.Clamp(cores, 0, Environment.ProcessorCount)
+            : 0;
+        MemoryLimitBox.Text = s.RobloxMemoryLimitMb.ToString();
+        CoresBox.Text = s.RobloxMaxCores.ToString();
         AppSettings.Save();
     }
 

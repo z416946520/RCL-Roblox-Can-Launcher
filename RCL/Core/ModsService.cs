@@ -145,6 +145,29 @@ public static class ModsService
         Log.Info($"{(entry.Enabled ? "禁用" : "启用")}模组：{entry.Name}");
     }
 
+    /// <summary>Disables one mod by name; used by <see cref="ModCrashGuard"/>.</summary>
+    public static bool Disable(RclInstance inst, string name)
+    {
+        var path = Path.Combine(inst.ModsFolder, name);
+        var disabled = path + DisabledSuffix;
+        try
+        {
+            if (Directory.Exists(path))
+                Directory.Move(path, disabled);
+            else if (File.Exists(path))
+                File.Move(path, disabled, true);
+            else
+                return false;
+            Log.Info("禁用模组：" + name);
+            return true;
+        }
+        catch (Exception ex)
+        {
+            Log.Warn($"禁用模组 {name} 失败：{ex.Message}");
+            return false;
+        }
+    }
+
     public static void Delete(RclInstance inst, ModEntry entry)
     {
         var path = Path.Combine(inst.ModsFolder, entry.Name);
