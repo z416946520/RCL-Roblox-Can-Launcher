@@ -71,6 +71,8 @@
                 <Grid Grid.Row="1" ClipToBounds="True">
                     <Image x:Name="Wallpaper" Stretch="UniformToFill" IsHitTestVisible="False"
                            Opacity="0.22" Visibility="Collapsed"/>
+                    <Border x:Name="WallpaperDim" Background="#000000" Opacity="0"
+                            IsHitTestVisible="False" Visibility="Collapsed"/>
                     <ContentControl x:Name="PageHost"/>
 
                     <Border x:Name="ToastBorder" VerticalAlignment="Bottom" HorizontalAlignment="Left"

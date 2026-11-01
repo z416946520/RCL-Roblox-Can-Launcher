@@ -9,6 +9,12 @@ public sealed class AppSettings
     public string AccentHex { get; set; } = "#1370F3";
     public string BackgroundImage { get; set; } = "";
     public double BackgroundOpacity { get; set; } = 0.22;
+    /// <summary>Light | Dark</summary>
+    public string ThemeMode { get; set; } = "Light";
+    /// <summary>Fill | Fit | Center</summary>
+    public string BackgroundFit { get; set; } = "Fill";
+    /// <summary>Extra darkening on top of the background image, 0..0.8.</summary>
+    public double BackgroundDim { get; set; }
     public bool ConfirmLaunch { get; set; } = true;
     public bool CloseAfterLaunch { get; set; }
     public bool DefaultMultiInstance { get; set; }
@@ -58,6 +64,11 @@ public sealed class AppSettings
         }
         Current.MaxSlots = Math.Clamp(Current.MaxSlots, 1, 16);
         Current.BackgroundOpacity = Math.Clamp(Current.BackgroundOpacity, 0, 0.85);
+        Current.BackgroundDim = Math.Clamp(Current.BackgroundDim, 0, 0.8);
+        if (Current.ThemeMode is not ("Light" or "Dark"))
+            Current.ThemeMode = "Light";
+        if (Current.BackgroundFit is not ("Fill" or "Fit" or "Center"))
+            Current.BackgroundFit = "Fill";
         Current.WindowWidth = Math.Clamp(Current.WindowWidth, 1000, 5000);
         Current.WindowHeight = Math.Clamp(Current.WindowHeight, 640, 4000);
     }

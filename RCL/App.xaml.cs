@@ -18,7 +18,7 @@ public partial class App : Application
         Log.Info("==== RCL " + UpdateService.CurrentVersion + " 启动 ====");
         SecurityHardening.Apply();
         AppSettings.Load();
-        ThemeManager.Apply(AppSettings.Current.AccentHex);
+        ThemeManager.ApplyFromSettings();
         InstanceStore.Load();
         AccountService.Load();
         QuickLaunchService.Load();

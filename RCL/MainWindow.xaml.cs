@@ -77,7 +77,7 @@ public partial class MainWindow : Window
 
     public void ApplyAppearance()
     {
-        ThemeManager.Apply(AppSettings.Current.AccentHex);
+        ThemeManager.ApplyFromSettings();
         var path = AppSettings.Current.BackgroundImage;
         if (!string.IsNullOrWhiteSpace(path) && File.Exists(path))
         {
@@ -90,8 +90,19 @@ public partial class MainWindow : Window
                 image.EndInit();
                 image.Freeze();
                 Wallpaper.Source = image;
+                Wallpaper.Stretch = AppSettings.Current.BackgroundFit switch
+                {
+                    "Fit" => Stretch.Uniform,
+                    "Center" => Stretch.None,
+                    _ => Stretch.UniformToFill
+                };
                 Wallpaper.Opacity = AppSettings.Current.BackgroundOpacity;
                 Wallpaper.Visibility = Visibility.Visible;
+
+                WallpaperDim.Visibility = AppSettings.Current.BackgroundDim > 0.01
+                    ? Visibility.Visible
+                    : Visibility.Collapsed;
+                WallpaperDim.Opacity = AppSettings.Current.BackgroundDim;
             }
             catch (Exception ex)
             {
@@ -109,6 +120,7 @@ public partial class MainWindow : Window
     {
         Wallpaper.Source = null;
         Wallpaper.Visibility = Visibility.Collapsed;
+        WallpaperDim.Visibility = Visibility.Collapsed;
     }
 
     public void ShowToast(string message, bool error = false)

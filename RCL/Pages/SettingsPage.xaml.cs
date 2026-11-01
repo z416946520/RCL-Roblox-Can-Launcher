@@ -28,6 +28,7 @@ public partial class SettingsPage : UserControl
         Loaded += (_, _) =>
         {
             BuildAccentPalette();
+            BuildPresets();
             LoadIntoControls();
             _loading = false;
             RefreshAccountsUi();
@@ -84,6 +85,15 @@ public partial class SettingsPage : UserControl
             ? "未选择背景图"
             : s.BackgroundImage;
         OpacityCombo.SelectedIndex = NearestOpacityIndex(s.BackgroundOpacity);
+        FitCombo.SelectedIndex = s.BackgroundFit switch
+        {
+            "Fit" => 1,
+            "Center" => 2,
+            _ => 0
+        };
+        DimCombo.SelectedIndex = NearestIndex(DimValues, s.BackgroundDim);
+        DarkModeCheck.IsChecked = s.ThemeMode == "Dark";
+        PresetCombo.SelectedIndex = FindPresetIndex(s.AccentHex, s.ThemeMode == "Dark");
 
         MaxSlotsBox.Text = s.MaxSlots.ToString();
         DataPathText.Text = AppPaths.Base;
@@ -109,13 +119,17 @@ public partial class SettingsPage : UserControl
         _loading = false;
     }
 
-    private static int NearestOpacityIndex(double value)
+    private static int NearestOpacityIndex(double value) => NearestIndex(OpacityValues, value);
+
+    private static readonly double[] DimValues = { 0, 0.25, 0.5, 0.7 };
+
+    private static int NearestIndex(double[] values, double value)
     {
-        int best = 1;
+        int best = 0;
         double distance = double.MaxValue;
-        for (int i = 0; i < OpacityValues.Length; i++)
+        for (int i = 0; i < values.Length; i++)
         {
-            var d = Math.Abs(OpacityValues[i] - value);
+            var d = Math.Abs(values[i] - value);
             if (d < distance)
             {
                 distance = d;
@@ -123,6 +137,88 @@ public partial class SettingsPage : UserControl
             }
         }
         return best;
+    }
+
+    private sealed record PresetOption(string Name, string Accent, bool Dark)
+    {
+        public override string ToString() => Dark
+            ? Loc.T(Name) + " \u00b7 " + Loc.T("深色")
+            : Loc.T(Name);
+    }
+
+    private void BuildPresets()
+    {
+        if (PresetCombo.Items.Count > 0)
+            return;
+        PresetCombo.ItemsSource = ThemeManager.Presets
+            .Select(p => new PresetOption(p.Name, p.Accent, p.Dark))
+            .ToList();
+    }
+
+    private int FindPresetIndex(string accent, bool dark)
+    {
+        for (var i = 0; i < PresetCombo.Items.Count; i++)
+        {
+            if (PresetCombo.Items[i] is PresetOption option &&
+                string.Equals(option.Accent, accent, StringComparison.OrdinalIgnoreCase) &&
+                option.Dark == dark)
+                return i;
+        }
+        return -1;
+    }
+
+    private void DarkMode_Changed(object sender, RoutedEventArgs e)
+    {
+        if (_loading)
+            return;
+        AppSettings.Current.ThemeMode = DarkModeCheck.IsChecked == true ? "Dark" : "Light";
+        AppSettings.Save();
+        ApplyThemeChange(DarkModeCheck.IsChecked == true ? "已切换到深色模式" : "已切换到浅色模式");
+    }
+
+    private void Preset_Changed(object sender, SelectionChangedEventArgs e)
+    {
+        if (_loading || PresetCombo.SelectedItem is not PresetOption option)
+            return;
+        AppSettings.Current.AccentHex = option.Accent;
+        AppSettings.Current.ThemeMode = option.Dark ? "Dark" : "Light";
+        AppSettings.Save();
+        _loading = true;
+        DarkModeCheck.IsChecked = option.Dark;
+        AccentHexBox.Text = option.Accent;
+        AccentStatus.Text = "当前主题色：" + option.Accent;
+        _loading = false;
+        ApplyThemeChange("已应用主题：" + option.Name);
+    }
+
+    private void Fit_Changed(object sender, SelectionChangedEventArgs e)
+    {
+        if (_loading || FitCombo.SelectedIndex < 0)
+            return;
+        AppSettings.Current.BackgroundFit = FitCombo.SelectedIndex switch
+        {
+            1 => "Fit",
+            2 => "Center",
+            _ => "Fill"
+        };
+        AppSettings.Save();
+        MainWindowHost?.ApplyAppearance();
+    }
+
+    private void Dim_Changed(object sender, SelectionChangedEventArgs e)
+    {
+        if (_loading || DimCombo.SelectedIndex < 0)
+            return;
+        AppSettings.Current.BackgroundDim = DimValues[DimCombo.SelectedIndex];
+        AppSettings.Save();
+        MainWindowHost?.ApplyAppearance();
+    }
+
+    private void ApplyThemeChange(string toast)
+    {
+        ThemeManager.ApplyFromSettings();
+        MainWindowHost?.ApplyAppearance();
+        MainWindowHost?.ShowToast(toast);
     }
 
     private void BuildAccentPalette()
