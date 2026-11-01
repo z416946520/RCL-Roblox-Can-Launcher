@@ -279,6 +279,19 @@
 
                     <Border Style="{StaticResource Card}" Padding="20,17,20,18" Margin="0,0,0,14">
                         <StackPanel>
+                            <TextBlock Text="界面语言" Style="{StaticResource CardTitle}" Margin="0,0,0,6"/>
+                            <ComboBox x:Name="LanguageCombo" Style="{StaticResource PclComboBox}" Width="220"
+                                      HorizontalAlignment="Left" SelectionChanged="Language_Changed">
+                                <ComboBoxItem Content="简体中文"/>
+                                <ComboBoxItem Content="English"/>
+                            </ComboBox>
+                            <TextBlock x:Name="LanguageHint" Style="{StaticResource TinyText}" Margin="0,6,0,0"
+                                       Text="切换后重启 RCL 生效。英文界面覆盖主要文案，动态状态提示仍可能显示中文。"/>
+                        </StackPanel>
+                    </Border>
+
+                    <Border Style="{StaticResource Card}" Padding="20,17,20,18" Margin="0,0,0,14">
+                        <StackPanel>
                             <TextBlock Text="主题色" Style="{StaticResource CardTitle}" Margin="0,0,0,10"/>
                             <StackPanel x:Name="AccentPalette" Orientation="Horizontal" Margin="0,0,0,14"/>
                             <Grid>

@@ -34,6 +34,25 @@ public partial class App : Application
         AppDomain.CurrentDomain.UnhandledException += (_, args) =>
             Log.Error("未处理的异常：" + args.ExceptionObject);
 
+        // Bilingual UI: every window and page is translated as it loads, so dialogs opened later
+        // are covered too. Chinese stays the source text.
+        if (Loc.IsEnglish)
+        {
+            EventManager.RegisterClassHandler(typeof(Window), FrameworkElement.LoadedEvent,
+                new RoutedEventHandler((sender, _) =>
+                {
+                    if (sender is Window window)
+                        Loc.Apply(window);
+                }), true);
+            EventManager.RegisterClassHandler(typeof(System.Windows.Controls.UserControl),
+                FrameworkElement.LoadedEvent,
+                new RoutedEventHandler((sender, _) =>
+                {
+                    if (sender is System.Windows.Controls.UserControl page)
+                        Loc.Apply(page);
+                }), true);
+        }
+
         var window = new MainWindow();
         MainWindow = window;
         window.Show();

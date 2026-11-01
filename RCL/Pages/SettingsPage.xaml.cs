@@ -79,6 +79,7 @@ public partial class SettingsPage : UserControl
 
         AccentHexBox.Text = s.AccentHex;
         AccentStatus.Text = "当前主题色：" + s.AccentHex;
+        LanguageCombo.SelectedIndex = s.Language == "en" ? 1 : 0;
         BackgroundPathText.Text = string.IsNullOrWhiteSpace(s.BackgroundImage)
             ? "未选择背景图"
             : s.BackgroundImage;
@@ -202,6 +203,20 @@ public partial class SettingsPage : UserControl
             _ => "Auto"
         };
         AppSettings.Save();
+    }
+
+    private void Language_Changed(object sender, SelectionChangedEventArgs e)
+    {
+        if (_loading)
+            return;
+        var language = LanguageCombo.SelectedIndex == 1 ? "en" : "zh";
+        if (AppSettings.Current.Language == language)
+            return;
+        AppSettings.Current.Language = language;
+        AppSettings.Save();
+        MainWindowHost?.ShowToast(language == "en"
+            ? "Language saved - restart RCL to apply."
+            : "语言已保存，重启 RCL 后生效");
     }
 
     private void DefaultInstance_Changed(object sender, SelectionChangedEventArgs e)

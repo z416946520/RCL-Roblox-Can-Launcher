@@ -23,6 +23,8 @@ public sealed class AppSettings
     public string UpdateManifestUrl { get; set; } = "";
     /// <summary>Auto (立即更新) | Delay (一天后更新) | Manual (手动)。</summary>
     public string RobloxUpdateMode { get; set; } = "Auto";
+    /// <summary>UI language: "zh" (source) or "en" (translated by Localization).</summary>
+    public string Language { get; set; } = "zh";
     public bool OptimizeRoblox { get; set; }
     public int RobloxMemoryLimitMb { get; set; }
     public int RobloxMaxCores { get; set; }
