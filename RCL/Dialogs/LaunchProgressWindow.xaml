@@ -33,9 +33,18 @@
                            MaxWidth="470"/>
             </StackPanel>
 
-            <ProgressBar Grid.Row="2" x:Name="Progress" Height="6" IsIndeterminate="True"
-                         Margin="0,18,0,16" Foreground="{DynamicResource BrushAccent}"
-                         Background="{DynamicResource BrushBorder}"/>
+            <Grid Grid.Row="2" Height="6" Margin="0,18,0,16" ClipToBounds="True"
+                  Background="Transparent">
+                <Border x:Name="BarTrack" CornerRadius="3" Background="{DynamicResource BrushBorder}"/>
+                <Border x:Name="BarGlow" CornerRadius="3" Background="{DynamicResource BrushAccent}"
+                        HorizontalAlignment="Left" Width="140" RenderTransformOrigin="0,0.5">
+                    <Border.RenderTransform>
+                        <TranslateTransform x:Name="BarOffset" X="-140"/>
+                    </Border.RenderTransform>
+                </Border>
+                <Border x:Name="BarFill" CornerRadius="3" Background="{DynamicResource BrushAccent}"
+                        HorizontalAlignment="Left" Visibility="Collapsed"/>
+            </Grid>
 
             <Button Grid.Row="3" x:Name="CancelButton" Content="取消" Width="120" Height="30"
                     Style="{StaticResource PclButton}" HorizontalAlignment="Center" Click="Cancel_Click"/>

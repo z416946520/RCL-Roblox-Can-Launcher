@@ -2,6 +2,8 @@ using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Media.Imaging;
 using System.Windows.Input;
+using System.Windows.Media;
+using System.Windows.Media.Animation;
 using RCL.Core;
 
 namespace RCL.Dialogs;
@@ -28,6 +30,11 @@ public partial class LaunchProgressWindow : Window
         VersionText.Text = "Version: " + (version?.DisplayName ?? "\u2014");
         LogoImage.Source = LoadLogo();
         Report(Loc.T("正在与 Roblox 建立连接…"));
+        Loaded += (_, _) =>
+        {
+            if (_indeterminate)
+                StartSweep();
+        };
     }
 
     /// <summary>
@@ -71,14 +78,43 @@ public partial class LaunchProgressWindow : Window
         StatusText.Text = message;
         var match = PercentPattern.Match(message);
         if (match.Success && int.TryParse(match.Groups[1].Value, out var percent))
+            ShowPercent(Math.Clamp(percent, 0, 100));
+        else
+            ShowIndeterminate();
+    }
+
+    /// <summary>Rounded capsule sweep used while there is no real percentage to show.</summary>
+    private bool _indeterminate = true;
+
+    private void ShowIndeterminate()
+    {
+        if (_indeterminate && BarGlow.Visibility == Visibility.Visible)
+            return;
+        _indeterminate = true;
+        BarFill.Visibility = Visibility.Collapsed;
+        BarGlow.Visibility = Visibility.Visible;
+        StartSweep();
+    }
+
+    private void StartSweep()
+    {
+        var width = BarTrack.ActualWidth > 0 ? BarTrack.ActualWidth : 480;
+        var animation = new DoubleAnimation(-BarGlow.Width, width + BarGlow.Width,
+            TimeSpan.FromSeconds(1.5))
         {
-            Progress.IsIndeterminate = false;
-            Progress.Value = Math.Clamp(percent, 0, 100);
-        }
-        else if (!Progress.IsIndeterminate && !message.Contains('%'))
-        {
-            Progress.IsIndeterminate = true;
-        }
+            RepeatBehavior = RepeatBehavior.Forever
+        };
+        BarOffset.BeginAnimation(TranslateTransform.XProperty, animation);
+    }
+
+    private void ShowPercent(double percent)
+    {
+        _indeterminate = false;
+        BarOffset.BeginAnimation(TranslateTransform.XProperty, null);
+        BarGlow.Visibility = Visibility.Collapsed;
+        BarFill.Visibility = Visibility.Visible;
+        var width = BarTrack.ActualWidth > 0 ? BarTrack.ActualWidth : 480;
+        BarFill.Width = Math.Max(0, width * percent / 100.0);
     }
 
     public void CloseSafely()
@@ -94,7 +130,7 @@ public partial class LaunchProgressWindow : Window
         _cts.Cancel();
         CancelButton.IsEnabled = false;
         StatusText.Text = Loc.T("正在取消…");
-        Progress.IsIndeterminate = true;
+        ShowIndeterminate();
     }
 
     private void Header_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
