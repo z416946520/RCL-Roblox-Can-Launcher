@@ -41,7 +41,6 @@
                                Margin="0,4,0,0"/>
                     <StackPanel Orientation="Horizontal" Margin="0,14,0,0" HorizontalAlignment="Center">
                         <ComboBox x:Name="AccountCombo" Style="{StaticResource PclComboBox}" Width="190" Height="30"
-                                  DisplayMemberPath="Label"
                                   SelectionChanged="AccountCombo_SelectionChanged"/>
                         <Button x:Name="PrivacyButton" Style="{StaticResource IconButton}" Width="30" Height="30"
                                 Margin="6,0,0,0" Click="ToggleAnonymous_Click">

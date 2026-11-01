@@ -76,7 +76,12 @@ public partial class LaunchPage : UserControl
         RefreshAccountCard();
     }
 
-    private sealed record AccountOption(RobloxAccount Account, string Label);
+    private sealed record AccountOption(RobloxAccount Account, string Label)
+    {
+        // The PclComboBox template binds ContentTemplate on the selection box, which wins over
+        // DisplayMemberPath, so the label has to come from ToString().
+        public override string ToString() => Label;
+    }
 
     private static string MaskedLabel(RobloxAccount account)
     {
