@@ -229,9 +229,12 @@ public partial class MainWindow : Window
                 placeId,
                 jobId,
                 options.IsProtocolLaunch ? null : game?.Title,
-                inst.MultiInstance);
+                inst.MultiInstance,
+                deeplink: options.IsProtocolLaunch ? options.Deeplink : null);
 
-            ShowToast($"{inst.Name} 已启动（PID {result.Session.Pid}）");
+            ShowToast(result.SafeFallback
+                ? $"{inst.Name} 已用安全启动拉起（PID {result.Session.Pid}）"
+                : $"{inst.Name} 已启动（PID {result.Session.Pid}）");
             if (AppSettings.Current.CloseAfterLaunch)
                 Close();
         }

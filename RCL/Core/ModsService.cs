@@ -61,6 +61,8 @@ public static class ModsService
         return result.OrderBy(m => m.Name, StringComparer.OrdinalIgnoreCase).ToList();
     }
 
+    public static int CountEnabled(RclInstance inst) => List(inst).Count(m => m.Enabled);
+
     private static ModEntry Describe(string path, string name, bool enabled)
     {
         bool isDir = Directory.Exists(path);

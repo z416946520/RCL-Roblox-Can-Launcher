@@ -139,24 +139,6 @@ public static class AccountService
             account.AvatarUrl =
                 $"https://thumbnails.roblox.com/v1/users/avatar-headshot?userIds={user.Id}&size=150x150&format=Png&isCircular=true";
 
-        if (user is not null)
-        {
-            var avatar = await RobloxAccountApi.FetchAvatarAsync(user.Id, cancellationToken);
-            if (avatar is { Length: > 0 })
-            {
-                try
-                {
-                    Directory.CreateDirectory(AppPaths.Avatars);
-                    File.WriteAllBytes(account.AvatarCachePath, avatar);
-                    account.NotifyAvatarState();
-                }
-                catch (Exception ex)
-                {
-                    Log.Warn("保存账号头像失败：" + ex.Message);
-                }
-            }
-        }
-
         Save();
         string? switchError = null;
         try
@@ -172,6 +154,10 @@ public static class AccountService
         Log.Info((isNew ? "添加账号：" : "更新账号：") + account.Display +
                  (user is null ? "（待验证）" : ""));
         RaiseChanged();
+
+        // A thumbnail must never hold up the login flow; the homepage picks it up when it lands.
+        if (user is not null)
+            _ = RefreshAvatarAsync(account, force: true);
 
         return (account, switchError);
     }
@@ -241,24 +227,73 @@ public static class AccountService
         return ok;
     }
 
+    private static readonly TimeSpan AvatarMaxAge = TimeSpan.FromDays(7);
+    private static readonly HashSet<long> AvatarsInFlight = new();
+    private static readonly object AvatarGate = new();
+
+    /// <summary>
+    /// Fetches the headshot for one account and replaces the cached PNG atomically. Missing files
+    /// are downloaded, older ones are refreshed, so a changed avatar shows up on the next start
+    /// without blocking anything.
+    /// </summary>
+    public static async Task RefreshAvatarAsync(
+        RobloxAccount account,
+        bool force = false,
+        CancellationToken cancellationToken = default)
+    {
+        if (account.UserId <= 0)
+            return;
+        if (!force && account.HasAvatar && !IsAvatarStale(account))
+            return;
+
+        lock (AvatarGate)
+        {
+            if (!AvatarsInFlight.Add(account.UserId))
+                return;
+        }
+
+        try
+        {
+            var bytes = await RobloxAccountApi.FetchAvatarAsync(account.UserId, cancellationToken)
+                .ConfigureAwait(false);
+            if (bytes is not { Length: > 0 })
+                return;
+
+            Directory.CreateDirectory(AppPaths.Avatars);
+            var path = account.AvatarCachePath;
+            var temp = path + ".tmp";
+            await File.WriteAllBytesAsync(temp, bytes, cancellationToken).ConfigureAwait(false);
+            File.Move(temp, path, true);
+            account.NotifyAvatarState();
+            Log.Info($"已更新账号头像：{account.Display}");
+            RaiseChanged();
+        }
+        catch (Exception ex)
+        {
+            Log.Warn("保存账号头像失败：" + ex.Message);
+        }
+        finally
+        {
+            lock (AvatarGate)
+                AvatarsInFlight.Remove(account.UserId);
+        }
+    }
+
     public static async Task EnsureAvatarsAsync(CancellationToken cancellationToken = default)
     {
         foreach (var account in Accounts.ToList())
+            await RefreshAvatarAsync(account, cancellationToken: cancellationToken).ConfigureAwait(false);
+    }
+
+    private static bool IsAvatarStale(RobloxAccount account)
+    {
+        try
         {
-            if (account.HasAvatar || account.UserId <= 0)
-                continue;
-            var bytes = await RobloxAccountApi.FetchAvatarAsync(account.UserId, cancellationToken);
-            if (bytes is not { Length: > 0 })
-                continue;
-            try
-            {
-                Directory.CreateDirectory(AppPaths.Avatars);
-                File.WriteAllBytes(account.AvatarCachePath, bytes);
-                account.NotifyAvatarState();
-            }
-            catch
-            {
-            }
+            return File.GetLastWriteTimeUtc(account.AvatarCachePath) < DateTime.UtcNow - AvatarMaxAge;
+        }
+        catch
+        {
+            return true;
         }
     }
 

@@ -32,7 +32,19 @@ public partial class FastFlagDialog : Window
             JsonBox.Focus();
     }
 
-    private void NameBox_TextChanged(object sender, TextChangedEventArgs e) { if (ErrorText is not null) ErrorText.Text = ""; }
+    private void NameBox_TextChanged(object sender, TextChangedEventArgs e)
+    {
+        if (ErrorText is not null) ErrorText.Text = "";
+        UpdateNameHint();
+    }
+
+    private void UpdateNameHint()
+    {
+        if (NameHint is null)
+            return;
+        var name = NameBox?.Text?.Trim() ?? "";
+        NameHint.Text = name.Length == 0 ? "" : FastFlagAllowlist.Describe(name);
+    }
 
     private void ValueBox_TextChanged(object sender, TextChangedEventArgs e) { if (ErrorText is not null) ErrorText.Text = ""; }
 

@@ -16,7 +16,7 @@ public sealed class RclInstance : INotifyPropertyChanged
     private string _launchArgs = "";
     private string _iconColor = "#1370F3";
     private long _playtimeSeconds;
-    private bool _applyMods = true;
+    private bool _applyMods;
     private DateTime? _lastPlayed;
     private GameRef? _lastGame;
 
@@ -104,7 +104,7 @@ public sealed class FastFlagEntry : INotifyPropertyChanged
     public string Value { get => _value; set => Set(ref _value, value); }
     public bool Enabled { get => _enabled; set => Set(ref _enabled, value); }
 
-    [JsonIgnore] public bool IsKnown => FastFlags.KnownFlags.Contains(Name);
+    [JsonIgnore] public bool IsKnown => FastFlagAllowlist.IsKnown(Name);
 
     public event PropertyChangedEventHandler? PropertyChanged;
 

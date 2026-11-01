@@ -71,21 +71,9 @@ public sealed class PathToImageBrushConverter : IValueConverter
         var path = value as string;
         if (!string.IsNullOrWhiteSpace(path) && System.IO.File.Exists(path))
         {
-            try
-            {
-                var image = new BitmapImage();
-                image.BeginInit();
-                image.CacheOption = BitmapCacheOption.OnLoad;
-                image.UriSource = new Uri(path);
-                image.EndInit();
-                image.Freeze();
-                var brush = new ImageBrush(image) { Stretch = Stretch.UniformToFill };
-                brush.Freeze();
+            var brush = AvatarBrush.Load(path);
+            if (brush is not null)
                 return brush;
-            }
-            catch
-            {
-            }
         }
         return new SolidColorBrush(Color.FromRgb(0xEA, 0xF2, 0xFE));
     }

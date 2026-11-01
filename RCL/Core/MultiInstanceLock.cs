@@ -115,12 +115,13 @@ public static class MultiInstanceLock
         return null;
     }
 
-    public static void CleanupUnused()
+    public static int CleanupUnused()
     {
+        var removed = 0;
         try
         {
             if (!Directory.Exists(AppPaths.MultiInstance))
-                return;
+                return 0;
             var busy = MachineBusyPaths.Scan();
             foreach (var dir in Directory.GetDirectories(AppPaths.MultiInstance, "slot*"))
             {
@@ -129,6 +130,7 @@ public static class MultiInstanceLock
                 try
                 {
                     Directory.Delete(dir);
+                    removed++;
                     Log.Info("已清理多开槽位 " + dir);
                 }
                 catch (Exception ex)
@@ -141,6 +143,7 @@ public static class MultiInstanceLock
         {
             Log.Warn("清理多开槽位失败：" + ex.Message);
         }
+        return removed;
     }
 
     private static bool EnsureJunction(string link, string target)

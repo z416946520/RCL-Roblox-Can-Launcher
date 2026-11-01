@@ -69,6 +69,8 @@
                     <TextBlock Text="Flag 名称" Style="{StaticResource MutedText}" Margin="0,0,0,6"/>
                     <TextBox x:Name="NameBox" Style="{StaticResource PclTextBox}" FontFamily="Consolas"
                              FontSize="12" Height="32" TextChanged="NameBox_TextChanged"/>
+                    <TextBlock x:Name="NameHint" Style="{StaticResource TinyText}" Margin="0,5,0,0"
+                               TextWrapping="Wrap"/>
                     <TextBlock Text="值（JSON）" Style="{StaticResource MutedText}" Margin="0,14,0,6"/>
                     <TextBox x:Name="ValueBox" Style="{StaticResource PclTextBox}" FontFamily="Consolas"
                              FontSize="12" Height="32" Text="true" TextChanged="ValueBox_TextChanged"/>

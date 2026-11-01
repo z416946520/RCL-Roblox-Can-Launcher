@@ -25,6 +25,8 @@ public partial class App : Application
         SessionManager.Start();
         SessionManager.Changed += DiscordRpcService.RefreshFromSessions;
         DiscordRpcService.ApplySettings();
+        FastFlagAllowlist.LoadCache();
+        _ = FastFlagAllowlist.RefreshAsync();
 
         DispatcherUnhandledException += OnUnhandledException;
         AppDomain.CurrentDomain.UnhandledException += (_, args) =>
@@ -82,6 +84,7 @@ public sealed class CommandLineOptions
     public long? PlaceId { get; private set; }
     public string? JobId { get; private set; }
     public bool IsProtocolLaunch { get; private set; }
+    public string? Deeplink { get; private set; }
 
     public static CommandLineOptions Parse(string[] args)
     {
@@ -110,27 +113,35 @@ public sealed class CommandLineOptions
 
     private static void ParseProtocolArgument(string raw, CommandLineOptions result)
     {
-        var arg = raw.Trim().Trim('"');
-        if (!arg.StartsWith("roblox-player:", StringComparison.OrdinalIgnoreCase) &&
-            !arg.StartsWith("roblox:", StringComparison.OrdinalIgnoreCase))
+        // Voidstrap's rule: the raw argument never goes any further. Only a link taken apart by
+        // the allowlisted parser is kept, so a link cannot smuggle extra switches into Roblox.
+        if (!RobloxDeeplink.TryExtract(raw, out var deeplink) || deeplink is null)
             return;
+        if (!RobloxDeeplink.IsPlayerLink(deeplink))
+        {
+            Log.Warn("忽略 Studio 链接：" + deeplink.Scheme);
+            return;
+        }
 
         result.IsProtocolLaunch = true;
+        result.Deeplink = deeplink.OriginalString;
+
         string decoded;
         try
         {
-            decoded = Uri.UnescapeDataString(arg);
+            decoded = Uri.UnescapeDataString(deeplink.OriginalString);
         }
         catch
         {
-            decoded = arg;
+            decoded = deeplink.OriginalString;
         }
 
         var place = RobloxApi.ParsePlaceId(decoded);
         if (place > 0)
             result.PlaceId = place;
 
-        var job = ExtractQueryValue(decoded, "gameInstanceId") ?? ExtractQueryValue(decoded, "gameId");
+        var job = RobloxDeeplink.QueryValue(deeplink, "gameInstanceId")
+                  ?? RobloxDeeplink.QueryValue(deeplink, "gameId");
         if (!string.IsNullOrWhiteSpace(job))
             result.JobId = job;
 

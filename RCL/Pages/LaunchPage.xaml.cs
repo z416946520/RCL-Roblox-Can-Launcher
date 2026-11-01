@@ -27,6 +27,7 @@ public partial class LaunchPage : UserControl
             RefreshInstances();
             RefreshSessions();
             RefreshAccountCard();
+            _ = EnsureActiveAvatarAsync();
             if (!_logStarted)
             {
                 _logStarted = true;
@@ -42,6 +43,25 @@ public partial class LaunchPage : UserControl
         RefreshInstances();
         RefreshSessions();
         RefreshAccountCard();
+        _ = EnsureActiveAvatarAsync();
+    }
+
+    /// <summary>
+    /// Fills the homepage avatar when the cache is empty or old. Runs in the background and relies
+    /// on AccountService.Changed to repaint, so a slow thumbnail never delays the page.
+    /// </summary>
+    private async Task EnsureActiveAvatarAsync()
+    {
+        if (AccountService.ActiveAccount is not { } account)
+            return;
+        try
+        {
+            await AccountService.RefreshAvatarAsync(account);
+        }
+        catch (Exception ex)
+        {
+            Log.Warn("主页头像加载失败：" + ex.Message);
+        }
     }
 
     private bool _accountRefreshing;
@@ -76,13 +96,8 @@ public partial class LaunchPage : UserControl
             {
                 try
                 {
-                    var image = new BitmapImage();
-                    image.BeginInit();
-                    image.CacheOption = BitmapCacheOption.OnLoad;
-                    image.UriSource = new Uri(active.AvatarCachePath);
-                    image.EndInit();
-                    image.Freeze();
-                    AccountAvatar.Background = new ImageBrush(image) { Stretch = Stretch.UniformToFill };
+                    AccountAvatar.Background = AvatarBrush.Load(active.AvatarCachePath)
+                                              ?? (Brush)FindResource("BrushAccentSoft");
                     AccountInitial.Visibility = Visibility.Collapsed;
                 }
                 catch
@@ -296,7 +311,9 @@ public partial class LaunchPage : UserControl
                 AppendLog(status);
             });
 
-            var detail = result.UsedSlot ? "多开槽位" : "原始目录";
+            var detail = result.SafeFallback
+                ? "安全启动"
+                : result.UsedSlot ? "多开槽位" : "原始目录";
             var extras = new List<string>();
             if (result.ModsApplied > 0)
                 extras.Add($"{result.ModsApplied} 个模组文件");

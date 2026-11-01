@@ -408,21 +408,13 @@ public partial class SettingsPage : UserControl
     {
         if (account is not null && account.HasAvatar)
         {
-            try
+            var brush = AvatarBrush.Load(account.AvatarCachePath);
+            if (brush is not null)
             {
-                var image = new BitmapImage();
-                image.BeginInit();
-                image.CacheOption = BitmapCacheOption.OnLoad;
-                image.UriSource = new Uri(account.AvatarCachePath);
-                image.EndInit();
-                image.Freeze();
-                avatar.Background = new ImageBrush(image) { Stretch = Stretch.UniformToFill };
+                avatar.Background = brush;
                 initial.Visibility = Visibility.Collapsed;
                 initial.Text = account.Initial;
                 return;
-            }
-            catch
-            {
             }
         }
 
@@ -877,6 +869,46 @@ public partial class SettingsPage : UserControl
             Log.Error("安装更新失败", ex);
             DialogService.Error("更新失败：\n" + ex.Message, "更新失败");
         }
+    }
+
+    private void RestoreClient_Click(object sender, RoutedEventArgs e)
+    {
+        if (RobloxInstall.RunningCount() > 0)
+        {
+            DialogService.Info("请先关闭所有 Roblox 客户端，再还原客户端修改。", "客户端安全");
+            return;
+        }
+
+        if (!DialogService.Confirm(
+                "将还原 RCL 写入的 FastFlags、恢复被模组覆盖的文件，并清理空闲的多开槽位。\n\n" +
+                "不会删除你的模组源文件，也不会改动其他启动器的文件。继续吗？",
+                "还原客户端修改", "还原", "取消"))
+            return;
+
+        try
+        {
+            var result = ClientCleanupService.RestoreAll();
+            var text = result.Summary;
+            if (result.Warnings.Count > 0)
+                text += "\n\n" + string.Join("\n", result.Warnings.Take(4)) +
+                        (result.Warnings.Count > 4 ? "\n…" : "");
+            ClientSafetyStatus.Text = text;
+            if (result.ChangedAnything || result.Warnings.Count > 0)
+                DialogService.Info(text, "客户端安全");
+            else
+                MainWindowHost?.ShowToast("未发现 RCL 写入的客户端修改");
+        }
+        catch (Exception ex)
+        {
+            Log.Error("还原客户端修改失败", ex);
+            DialogService.Error("还原失败：\n" + ex.Message, "客户端安全");
+        }
+    }
+
+    private void OpenRepair_Click(object sender, RoutedEventArgs e)
+    {
+        MainWindowHost?.NavigateTo(2);
+        MainWindowHost?.ShowToast("在「已安装版本」选择版本，点「校验并修复」");
     }
 
     private MainWindow? MainWindowHost => Window.GetWindow(this) as MainWindow;

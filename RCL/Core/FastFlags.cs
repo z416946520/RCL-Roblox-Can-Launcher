@@ -123,21 +123,7 @@ public static class FastFlags
         {
             // The instance has no active flags: undo whatever RCL wrote last time instead of
             // leaving stale flags behind for this client.
-            try
-            {
-                if (File.Exists(backup) && File.Exists(target))
-                    File.Copy(backup, target, true);
-                else if (File.Exists(marker) && File.Exists(target))
-                    File.Delete(target);
-                if (File.Exists(backup))
-                    File.Delete(backup);
-                if (File.Exists(marker))
-                    File.Delete(marker);
-            }
-            catch (Exception ex)
-            {
-                Log.Warn("清理旧 FastFlags 失败：" + ex.Message);
-            }
+            RestoreFromVersion(versionDir);
             return null;
         }
 
@@ -155,9 +141,53 @@ public static class FastFlags
         return target;
     }
 
+    /// <summary>
+    /// Removes the ClientAppSettings.json that RCL wrote and restores the pre-RCL copy when one
+    /// exists. Returns true when a file was restored or removed. Files written by another
+    /// bootstrapper without an RCL marker are left untouched.
+    /// </summary>
+    public static bool RestoreFromVersion(string versionDir)
+    {
+        var target = Path.Combine(versionDir, "ClientSettings", "ClientAppSettings.json");
+        var backup = BackupPath(versionDir);
+        var marker = MarkerPath(versionDir);
+        var changed = false;
+
+        try
+        {
+            if (File.Exists(backup) && File.Exists(target))
+            {
+                File.Copy(backup, target, true);
+                changed = true;
+            }
+            else if (File.Exists(marker) && File.Exists(target))
+            {
+                File.Delete(target);
+                changed = true;
+            }
+
+            if (File.Exists(backup))
+                File.Delete(backup);
+            if (File.Exists(marker))
+                File.Delete(marker);
+
+            if (changed)
+                Log.Info("已还原 FastFlags 客户端配置：" + versionDir);
+        }
+        catch (Exception ex)
+        {
+            Log.Warn("还原 FastFlags 失败：" + ex.Message);
+        }
+
+        return changed;
+    }
+
     private static string BackupPath(string versionDir) =>
         Path.Combine(AppPaths.Backups, Path.GetFileName(versionDir.TrimEnd(Path.DirectorySeparatorChar)),
             "ClientAppSettings.json");
+
+    private static string MarkerPath(string versionDir) =>
+        Path.Combine(Path.GetDirectoryName(BackupPath(versionDir))!, "rcl-written.marker");
 
     public static int ImportFromFile(RclInstance instance, string path)
     {

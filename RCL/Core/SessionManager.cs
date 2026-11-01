@@ -173,6 +173,7 @@ public sealed class LaunchResult
     public string Executable { get; init; } = "";
     public bool MultiInstance { get; init; }
     public bool UsedSlot { get; init; }
+    public bool SafeFallback { get; init; }
     public int ModsApplied { get; init; }
     public int FlagsApplied { get; init; }
     public string Arguments { get; init; } = "";
@@ -189,7 +190,8 @@ public static class LaunchService
         string? placeName,
         bool multiInstance,
         Action<string>? status = null,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default,
+        string? deeplink = null)
     {
         await Gate.WaitAsync(cancellationToken);
         try
@@ -205,11 +207,12 @@ public static class LaunchService
 
             Log.Info($"启动 {instance.Name}，版本 {version.FolderName}，多开={multiInstance}");
 
-            status?.Invoke("应用 FastFlags…");
-            var flagsPath = FastFlags.DeployToVersion(instance, version.Directory);
-            var flagsApplied = instance.FastFlags.Count(f => f.Enabled && !string.IsNullOrWhiteSpace(f.Name));
-
+            int flagsApplied = 0;
             int modsApplied = 0;
+            status?.Invoke("应用 FastFlags…");
+            FastFlags.DeployToVersion(instance, version.Directory);
+            flagsApplied = instance.FastFlags.Count(f => f.Enabled && !string.IsNullOrWhiteSpace(f.Name));
+
             if (instance.ApplyMods)
             {
                 status?.Invoke("应用模组…");
@@ -234,7 +237,7 @@ public static class LaunchService
                 }
             }
 
-            var argumentList = BuildArguments(placeId, jobId, instance.LaunchArgs);
+            var argumentList = BuildArguments(placeId, jobId, instance.LaunchArgs, deeplink);
             try
             {
                 AccountService.PrepareLaunch();
@@ -244,28 +247,38 @@ public static class LaunchService
                 throw new LaunchException(ex.Message);
             }
 
-            var psi = new ProcessStartInfo
-            {
-                FileName = exe,
-                WorkingDirectory = launchDir,
-                UseShellExecute = false
-            };
-            foreach (var arg in argumentList)
-                psi.ArgumentList.Add(arg);
+            var attempt = await StartAsync(exe, launchDir, argumentList, status);
+            bool safeFallback = false;
 
-            status?.Invoke("启动 Roblox…");
-            Process? process;
-            try
+            if (attempt.Watch.Health == LaunchHealth.Crashed)
             {
-                process = Process.Start(psi);
-            }
-            catch (Exception ex)
-            {
-                throw new LaunchException("Roblox 启动失败：\n" + ex.Message);
+                Log.Warn($"Roblox 启动即崩溃（退出码 {FormatExitCode(attempt.Watch.ExitCode)}），按原样重试一次");
+                status?.Invoke("客户端启动崩溃，按原样重试…");
+                attempt = await StartAsync(exe, launchDir, argumentList, status);
             }
 
-            if (process is null)
-                throw new LaunchException("Roblox 没有返回进程句柄，启动失败。");
+            if (attempt.Watch.Health == LaunchHealth.Crashed)
+            {
+                Log.Warn("Roblox 连续两次启动崩溃，改用安全启动（跳过 FastFlags、模组与多开）");
+                status?.Invoke("仍然崩溃，改用安全启动…");
+                FastFlags.RestoreFromVersion(version.Directory);
+                ModsService.Restore(instance, version.Directory);
+                flagsApplied = 0;
+                modsApplied = 0;
+                attempt = await StartAsync(version.ExePath, version.Directory, argumentList, status);
+                if (attempt.Watch.Health != LaunchHealth.Crashed)
+                {
+                    exe = version.ExePath;
+                    launchDir = version.Directory;
+                    usedSlot = false;
+                    safeFallback = true;
+                }
+            }
+
+            if (attempt.Watch.Health == LaunchHealth.Crashed)
+                throw new LaunchException(BuildCrashMessage(attempt.Watch));
+
+            var process = attempt.Process;
 
             var displayName = string.IsNullOrWhiteSpace(placeName) ? "" : placeName!;
             var session = SessionManager.Track(instance, process, displayName, launchDir, placeId);
@@ -292,6 +305,7 @@ public static class LaunchService
                 Executable = exe,
                 MultiInstance = multiInstance,
                 UsedSlot = usedSlot,
+                SafeFallback = safeFallback,
                 ModsApplied = modsApplied,
                 FlagsApplied = flagsApplied,
                 Arguments = string.Join(' ', argumentList)
@@ -303,19 +317,84 @@ public static class LaunchService
         }
     }
 
-    public static List<string> BuildArguments(long? placeId, string? jobId, string? extra)
+    private static async Task<LaunchAttempt> StartAsync(
+        string exe,
+        string launchDir,
+        List<string> argumentList,
+        Action<string>? status)
+    {
+        // Snapshot first: a log written after this point belongs to the launch below.
+        var existingLogs = StartupCrashGuard.SnapshotLogs();
+
+        var psi = new ProcessStartInfo
+        {
+            FileName = exe,
+            WorkingDirectory = launchDir,
+            UseShellExecute = false
+        };
+        foreach (var arg in argumentList)
+            psi.ArgumentList.Add(arg);
+
+        status?.Invoke("启动 Roblox…");
+        Process? process;
+        try
+        {
+            process = Process.Start(psi);
+        }
+        catch (Exception ex)
+        {
+            throw new LaunchException("Roblox 启动失败：\n" + ex.Message);
+        }
+
+        if (process is null)
+            throw new LaunchException("Roblox 没有返回进程句柄，启动失败。");
+
+        status?.Invoke("等待客户端就绪…");
+        var watch = await StartupCrashGuard.WaitAsync(process, existingLogs, DateTime.UtcNow);
+        return new LaunchAttempt(process, watch);
+    }
+
+    private static string BuildCrashMessage(StartupWatchResult watch)
+    {
+        var log = string.IsNullOrEmpty(watch.LogFile) ? "" : "\n日志：" + watch.LogFile;
+        return "Roblox 在启动阶段连续崩溃（退出码 " + FormatExitCode(watch.ExitCode) + "），安全启动也没能拉起。\n" +
+               "这通常来自客户端本体、显卡驱动或注入游戏的其他程序，而不是 RCL 写入的设置。" +
+               "可以试试：更新显卡驱动、关闭覆盖层与杀毒注入，或重装一次客户端。" + log;
+    }
+
+    private static string FormatExitCode(int? code) =>
+        code is { } value ? $"0x{(uint)value:X8}" : "未知";
+
+    private sealed record LaunchAttempt(Process Process, StartupWatchResult Watch);
+
+    public static List<string> BuildArguments(long? placeId, string? jobId, string? extra, string? deeplink = null)
     {
         var args = new List<string>();
-        if (placeId is > 0)
+        if (!string.IsNullOrWhiteSpace(deeplink))
         {
-            var uri = $"roblox://placeId={placeId.Value}";
-            if (!string.IsNullOrWhiteSpace(jobId))
-                uri += "&gameInstanceId=" + Uri.EscapeDataString(jobId.Trim());
-            args.Add(uri);
+            // Only a validated link reaches the client; the raw string is never forwarded.
+            if (!RobloxDeeplink.TryExtract(deeplink, out var parsed) || parsed is null ||
+                !RobloxDeeplink.IsPlayerLink(parsed))
+                throw new LaunchException("启动链接无效，已拒绝。");
+            args.Add(parsed.OriginalString);
+        }
+        else if (placeId is > 0)
+        {
+            args.Add(RobloxDeeplink.BuildPlayerLink(placeId.Value, jobId));
         }
 
         if (!string.IsNullOrWhiteSpace(extra))
+        {
+            if (extra.Any(char.IsControl))
+                throw new LaunchException("启动参数包含不可见控制字符，已拒绝。");
             args.AddRange(SplitArguments(extra));
+        }
+
+        // Without a link the client only spins up its tray host and exits; -app is what brings
+        // up the Roblox window.
+        if (args.Count == 0)
+            args.Add("-app");
+
         return args;
     }
 

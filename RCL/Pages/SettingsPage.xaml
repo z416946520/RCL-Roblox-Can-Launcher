@@ -109,6 +109,22 @@
                                        Text="接管后，点击网页上的 Roblox 链接会由 RCL 打开，并使用当前选择的账号。原处理程序会备份在 RCL 数据目录，可随时恢复。"/>
                         </StackPanel>
                     </Border>
+
+                    <Border Style="{StaticResource Card}" Padding="20,17,20,18" Margin="0,14,0,0">
+                        <StackPanel>
+                            <TextBlock Text="客户端安全" Style="{StaticResource CardTitle}" Margin="0,0,0,6"/>
+                            <TextBlock Style="{StaticResource MutedText}" Margin="0,0,0,10" TextWrapping="Wrap"
+                                       Text="这里可以还原 RCL 写入的客户端修改；不会删除你的模组源文件。"/>
+                            <StackPanel Orientation="Horizontal">
+                                <Button Content="还原 RCL 客户端修改" Style="{StaticResource PclButton}" Height="30"
+                                        MinWidth="140" Click="RestoreClient_Click"/>
+                                <Button Content="打开官方版本修复" Style="{StaticResource GhostButton}" Height="30"
+                                        Margin="8,0,0,0" Click="OpenRepair_Click"/>
+                            </StackPanel>
+                            <TextBlock x:Name="ClientSafetyStatus" Style="{StaticResource TinyText}" Margin="0,8,0,0"
+                                       TextWrapping="Wrap" Text="尚未检查。还原前请先关闭所有 Roblox 客户端。"/>
+                        </StackPanel>
+                    </Border>
                 </StackPanel>
             </ScrollViewer>
 

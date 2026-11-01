@@ -30,6 +30,8 @@ public partial class InstancesPage : UserControl
         _saveTimer.Tick += (_, _) => FlushSave();
         InstanceStore.Changed += OnStoreChanged;
         PresetCombo.ItemsSource = FastFlags.Presets;
+        FastFlagAllowlist.Updated += OnAllowlistUpdated;
+        Unloaded += (_, _) => FastFlagAllowlist.Updated -= OnAllowlistUpdated;
         Loaded += (_, _) =>
         {
             BuildPalette();
@@ -509,11 +511,21 @@ public partial class InstancesPage : UserControl
         FlagsWarning.Visibility = unknown.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
         if (unknown.Count > 0)
         {
-            FlagsWarningTitle.Text = $"有 {unknown.Count} 条 Flag 不在 RCL 的常见列表中";
+            FlagsWarningTitle.Text = $"有 {unknown.Count} 条 Flag 不在 Roblox 公开列表中";
             FlagsWarningText.Text = string.Join("、", unknown.Take(4)) +
                                     (unknown.Count > 4 ? " …" : "") +
-                                    "。请确认来源可靠；启动前会照常写入。";
+                                    "。照常写入客户端，这里只作提醒。";
         }
+    }
+
+    private void OnAllowlistUpdated()
+    {
+        if (!Dispatcher.CheckAccess())
+        {
+            Dispatcher.BeginInvoke(RefreshFlags);
+            return;
+        }
+        RefreshFlags();
     }
 
     private void FlagSearch_TextChanged(object sender, TextChangedEventArgs e)
@@ -876,7 +888,8 @@ public partial class InstancesPage : UserControl
         LaunchStatus.Text = "准备启动…";
         try
         {
-            var result = await LaunchService.LaunchAsync(inst, null, null, null, multi, s => LaunchStatus.Text = s);
+            var result = await LaunchService.LaunchAsync(inst, null, null, null, multi,
+                s => LaunchStatus.Text = s);
             LaunchStatus.Text = $"已启动 · PID {result.Session.Pid}";
             MainWindowHost?.ShowToast($"{inst.Name} 已启动（PID {result.Session.Pid}）");
             if (AppSettings.Current.CloseAfterLaunch)
