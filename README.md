@@ -4,6 +4,8 @@ PCL2 风格的 Windows Roblox 启动器：实例隔离、多开、账号切换�
 
 RCL 只做「启动器该做的事」：管理本地客户端文件、按你的配置启动 Roblox、通过官方接口取信息。它不注入游戏进程、不修改客户端运行时、不绕过任何检测。
 
+> **非官方项目**：RCL 与 Roblox Corporation 无任何关联、授权或背书。使用本软件即表示你已阅读并同意文末的[免责声明与使用条款](#免责声明与使用条款)，风险自担。
+
 [官网 / 使用说明](https://z416946520.github.io/RCL-Roblox-Can-Launcher/) · [下载最新版](https://github.com/z416946520/RCL-Roblox-Can-Launcher/releases/latest)
 
 ## 功能
@@ -101,6 +103,62 @@ dotnet publish RCL/RCL.csproj -c Release -r win-x64 --self-contained true `
 - RCL 不提供、也不计划提供任何修改客户端运行时、注入进程或绕过检测的功能。
 - 修改本地客户端文件（FastFlags、模组覆盖）属于个人使用范畴，是否违反 Roblox 条款由使用者自行判断；RCL 会在写入前备份，并提供一键还原。
 - 多开与账号切换只在本地生效，不涉及服务端行为。
+
+## 免责声明与使用条款
+
+> 最后更新：2026-11-01
+
+**下载、安装、运行或以任何方式使用 RCL（下称"本软件"），即表示你已完整阅读、理解并同意以下全部条款；如不同意任何一条，请立即停止使用并删除本软件及其全部副本。**
+
+### 1. 非官方、无关联
+
+本软件是独立的第三方工具，与 Roblox Corporation 及其母公司、子公司、关联公司**无任何隶属、代理、合作、赞助、背书或授权关系**。文中出现的 "Roblox"、"Roblox Player" 等名称、标识与商标，均归其各自权利人所有，仅用于说明用途。本软件不包含、不分发、不修改 Roblox 的任何专有代码、资源或客户端文件。
+
+### 2. 按现状提供
+
+本软件按**"现状"（AS IS）**与**"现有"（AS AVAILABLE）**提供，不附带任何形式的明示或默示担保，包括但不限于对适销性、特定用途适用性、权利完整性、不侵权、无中断、无错误、无病毒或不造成损害的担保。作者不承诺本软件持续可用、与任何特定版本的 Roblox 客户端兼容，或有义务修复任何缺陷。
+
+### 3. 使用风险自担
+
+你明确理解并同意：
+
+- 修改本地客户端文件（包括但不限于 FastFlags、模组覆盖、多开、快捷启动参数）**可能违反 Roblox 服务条款或所在平台规则**，并可能导致账号被限制、封禁或受到其他处置；
+- 上述风险由**你自行判断并完全承担**；作者不作任何保证，也不承担任何责任；
+- 本软件不提供、也不得被用于任何规避技术保护措施、反作弊或检测机制、破坏游戏公平性或侵害他人权益的用途；
+- 你应自行确认在所在司法辖区与平台上使用本软件合法、合规。
+
+### 4. 无技术支持义务
+
+本软件为免费软件，作者及贡献者**无提供技术支持、维护、更新、适配或修复的义务**。软件内置的更新检查功能不构成任何持续维护的承诺，作者可随时暂停、变更或终止开发与分发。
+
+### 5. 数据与凭据
+
+- 账号 Cookie 使用 Windows DPAPI 加密后保存在**本机**；本软件不上传你的登录凭据或游玩数据。
+- 你需自行负责设备、账户与凭据的安全。因本机环境、第三方软件、网络环境或你自身操作导致的泄露、丢失与损失，由你自行承担。
+
+### 6. 第三方组件与服务
+
+本软件使用或调用第三方组件与服务（包括但不限于 .NET / WPF、WebView2、Roblox 官方部署接口、GitHub Releases、WEAO 等）。其可用性、条款、许可与行为由各自提供方决定，作者不对第三方服务的中断、变更、内容、数据准确性或行为负责。
+
+### 7. 责任限制
+
+**在适用法律允许的最大范围内**，作者及贡献者对因使用或无法使用本软件而产生的任何直接、间接、附带、特殊、惩罚性或后果性损害（包括但不限于数据丢失、账号处置、设备损坏、利润损失、业务中断、第三方索赔）**不承担任何责任**，无论其是否已被告知该等损害的可能性，也无论索赔基于合同、侵权、严格责任或其他理论。
+
+### 8. 赔偿
+
+你同意就因你使用本软件、违反本条款或侵害任何第三方权利而引起的任何索赔、诉讼、损失、责任与费用（包括合理的律师费），向作者及贡献者作出赔偿并使其免受损害。
+
+### 9. 条款变更与可分割性
+
+作者可随时修改本声明，修改自发布之时起生效；你继续使用即视为接受修改。若任何条款被有权机关认定无效或不可执行，该条款将在实现其原意的最小必要范围内被调整，其余条款继续完全有效。
+
+### 10. 强制性法律
+
+本条款不排除、也不限制任何依强制性法律不得排除或限制的责任（例如因故意或重大过失造成的责任，或消费者依法享有的不可放弃的权利）。若本条款与适用法律冲突，以适用法律为准，其余条款继续有效。
+
+---
+
+**English summary.** RCL is an unofficial third-party launcher and is not affiliated with, endorsed by, sponsored by, or authorized by Roblox Corporation. It is provided "AS IS" and "AS AVAILABLE", without warranties of any kind. You use it entirely at your own risk: modifying local client files may violate Roblox's Terms of Use and may result in account action. To the maximum extent permitted by applicable law, the authors accept no liability for any damages, and you agree to indemnify them against claims arising from your use. Nothing in these terms excludes or limits liability that cannot be excluded or limited under mandatory law.
 
 ## 致谢
 
